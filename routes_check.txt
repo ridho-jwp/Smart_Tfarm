@@ -1,0 +1,21 @@
+
+  GET|HEAD  / ...... 
+  GET|HEAD  anomalies anomalies ΓÇ║ AnomalyController@inΓÇª
+  POST      anomalies/{anomaly}/resolve anomalies.resolve ΓÇ║ AnomΓÇª
+  GET|HEAD  api/sensor-data/latest sensor.latest ΓÇ║ DashboardController@ΓÇª
+  POST      api/v1/anomaly Api\AnomalyControllΓÇª
+  GET|HEAD  api/v1/command/{deviceId} Api\DeviceStatusCoΓÇª
+  POST      api/v1/heartbeat Api\DeviceStatusControllerΓÇª
+  POST      api/v1/sensor-data Api\SensorDataContΓÇª
+  POST      control/toggle control.toggle ΓÇ║ DeviceControlControlleΓÇª
+  GET|HEAD  dashboard dashboard ΓÇ║ DashboardController@inΓÇª
+  GET|HEAD  history history ΓÇ║ SensorHistoryController@indeΓÇª
+  GET|HEAD  login lΓÇª
+  POST      login lΓÇª
+  POST      logout ΓÇª
+  GET|HEAD  storage/{path} storaΓÇª
+  PUT       storage/{path} storage.locaΓÇª
+  GET|HEAD  up ..... 
+
+ Showing [17] routes
+

@@ -1,0 +1,5 @@
+[previous exception] [object] (ErrorException(code: 0): Undefined variable $pumpDevices at C:/_Kong/_akademik/smart_pakcoy/storage/framework/views/2bd2ff2f81614914f3639b657006502e.php:110)
+#0 C:/_Kong/_akademik/smart_pakcoy/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(258): Illuminate/Foundation/Bootstrap/HandleExceptions->handleError(2, 'Undefined varia...', 'C://_Kong//_akade...', 110)
+#1 C:/_Kong/_akademik/smart_pakcoy/storage/framework/views/2bd2ff2f81614914f3639b657006502e.php(110): Illuminate/Foundation/Bootstrap/HandleExceptions->Illuminate/Foundation/Bootstrap/{closure}(2, 'Undefined varia...', 'C://_Kong//_akade...', 110)
+#21 C:/_Kong/_akademik/smart_pakcoy/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#22 C:/_Kong/_akademik/smart_pakcoy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate/View/Middleware/ShareErrorsFromSession->handle(Object(Illuminate/Http/Request), Object(Closure))

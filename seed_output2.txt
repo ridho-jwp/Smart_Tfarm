@@ -1,0 +1,43 @@
+
+  Dropping all tables  67.37ms DONE
+
+   INFO  Preparing database.  
+
+  Creating migration table  10.23ms DONE
+
+   INFO  Running migrations.  
+
+  0001_01_01_000000_create_users_table  53.46ms DONE
+  0001_01_01_000001_create_cache_table  40.55ms DONE
+  0001_01_01_000002_create_jobs_table  47.63ms DONE
+  2026_02_22_000001_create_devices_table  16.73ms DONE
+  2026_02_22_000002_create_sensors_data_table  55.34ms DONE
+  2026_02_22_000003_create_anomalies_table  45.85ms DONE
+  2026_02_22_000004_create_device_logs_table  76.55ms DONE
+
+
+   INFO  Seeding database.  
+
+  Database\Seeders\AdminSeeder  RUNNING  
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[42S22]: Column not found: 1054 Unknown column 'user_id' in 'field list' (Connection: mysql, Host: 127.0.0.1, Port: 3306, Database: smart_pakcoy, SQL: insert into `device_logs` (`device_id`, `action`, `user_id`, `created_at`, `updated_at`) values (2, pump_on, 1, 2026-02-22 11:27:30, 2026-02-22 15:27:30))
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+    834Γûò             $exceptionType = $this->isUniqueConstraintError($e)
+    835Γûò                 ? UniqueConstraintViolationException::class
+    836Γûò                 : QueryException::class;
+    837Γûò 
+  Γ₧£ 838Γûò             throw new $exceptionType(
+    839Γûò                 $this->getNameWithReadWriteType(),
+    840Γûò                 $query,
+    841Γûò                 $this->prepareBindings($bindings),
+    842Γûò                 $e,
+
+  1   vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:47
+      PDOException::("SQLSTATE[42S22]: Column not found: 1054 Unknown column 'user_id' in 'field list'")
+
+  2   vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:47
+      PDO::prepare("insert into `device_logs` (`device_id`, `action`, `user_id`, `created_at`, `updated_at`) values (?, ?, ?, ?, ?)")
+

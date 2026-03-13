@@ -1,0 +1,3 @@
+[2026-02-22 15:43:11] local.ERROR: Undefined variable $pumpDevices (View: C:\_Kong\_akademik\smart_pakcoy\resources\views\dashboard.blade.php) {"userId":1,"exception":"[object] (Illuminate\\View\\View
+#0 C:/_Kong/_akademik/smart_pakcoy/vendor/laravel/framework/src/Illuminate/View/Engines/PhpEngine.php(59): Illuminate/View/Engines/CompilerEngine->handleViewException(Object(ErrorException), 1)
+#17 C:/_Kong/_akademik/smart_pakcoy/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminat

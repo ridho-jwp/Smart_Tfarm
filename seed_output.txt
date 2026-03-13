@@ -1,0 +1,43 @@
+
+  Dropping all tables  68.34ms DONE
+
+   INFO  Preparing database.  
+
+  Creating migration table  11.55ms DONE
+
+   INFO  Running migrations.  
+
+  0001_01_01_000000_create_users_table  56.34ms DONE
+  0001_01_01_000001_create_cache_table  41.75ms DONE
+  0001_01_01_000002_create_jobs_table  45.15ms DONE
+  2026_02_22_000001_create_devices_table  22.04ms DONE
+  2026_02_22_000002_create_sensors_data_table  60.07ms DONE
+  2026_02_22_000003_create_anomalies_table  53.12ms DONE
+  2026_02_22_000004_create_device_logs_table  96.20ms DONE
+
+
+   INFO  Seeding database.  
+
+  Database\Seeders\AdminSeeder  RUNNING  
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[01000]: Warning: 1265 Data truncated for column 'type' at row 1 (Connection: mysql, Host: 127.0.0.1, Port: 3306, Database: smart_pakcoy, SQL: insert into `devices` (`device_id`, `name`, `type`, `is_online`, `last_heartbeat`, `updated_at`, `created_at`) values (ESP32-CAM-001, Kamera Tanaman, camera, 1, 2026-02-22 15:26:49, 2026-02-22 15:26:49, 2026-02-22 15:26:49))
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+    834Γûò             $exceptionType = $this->isUniqueConstraintError($e)
+    835Γûò                 ? UniqueConstraintViolationException::class
+    836Γûò                 : QueryException::class;
+    837Γûò 
+  Γ₧£ 838Γûò             throw new $exceptionType(
+    839Γûò                 $this->getNameWithReadWriteType(),
+    840Γûò                 $query,
+    841Γûò                 $this->prepareBindings($bindings),
+    842Γûò                 $e,
+
+  1   vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:53
+      PDOException::("SQLSTATE[01000]: Warning: 1265 Data truncated for column 'type' at row 1")
+
+  2   vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:53
+      PDOStatement::execute()
+
