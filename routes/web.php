@@ -7,17 +7,15 @@ use App\Http\Controllers\DeviceControlController;
 use App\Http\Controllers\DeteksiHamaController;
 use App\Http\Controllers\PlantConfigController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\PestisidaController;
 use Illuminate\Support\Facades\Route;
 
 
-<<<<<<< HEAD
 // Landing page — halaman pertama yang dikunjungi
-Route::get('/', [LandingController::class, 'index'])->name('landing');
-=======
+// Route::get('/', [LandingController::class, 'index'])->name('landing');
 Route::get('/', function () {
     return auth()->check() ? redirect('/dashboard') : redirect('/profile');
 });
->>>>>>> e66dddaef6b7618d0d85dadaf00c5b43ebf383eb
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -55,4 +53,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/configs/presets/apply',        [PlantConfigController::class, 'applyPreset'])->name('configs.preset.apply');
     Route::post('/configs/presets',              [PlantConfigController::class, 'storePreset'])->name('configs.preset.store');
     Route::delete('/configs/presets/{preset}',   [PlantConfigController::class, 'destroyPreset'])->name('configs.preset.destroy');
+
+
+
+
+    Route::get('/configs/pestisida/{id}',[PestisidaController::class,'index'])->name('configs.pestisida');
+    Route::post('/configs/pestisida/{id}',[PestisidaController::class,'create'])->name('pestisida.store');
 });

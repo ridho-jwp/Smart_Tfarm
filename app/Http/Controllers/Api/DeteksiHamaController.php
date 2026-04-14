@@ -21,7 +21,7 @@ class DeteksiHamaController extends Controller
             $now = Carbon::now('Asia/Jakarta');
             $file = $request->file('image');
             $modelId = 'datasetpakcoy';
-            $version = '3';
+            $version = '4';
             $apiKey = env('ROBOFLOW_API_KEY');
 
             // 1. Kirim ke Roboflow
