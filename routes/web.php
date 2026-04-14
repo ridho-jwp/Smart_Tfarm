@@ -4,22 +4,27 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SensorHistoryController;
 use App\Http\Controllers\DeviceControlController;
-use App\Http\Controllers\AnomalyController;
+use App\Http\Controllers\DeteksiHamaController;
 use App\Http\Controllers\PlantConfigController;
 use App\Http\Controllers\LandingController;
 use Illuminate\Support\Facades\Route;
 
-/* |-------------------------------------------------------------------------- | Smart Pakcoy Hidroponik — Web Routes |-------------------------------------------------------------------------- */
 
+<<<<<<< HEAD
 // Landing page — halaman pertama yang dikunjungi
 Route::get('/', [LandingController::class, 'index'])->name('landing');
+=======
+Route::get('/', function () {
+    return auth()->check() ? redirect('/dashboard') : redirect('/profile');
+});
+>>>>>>> e66dddaef6b7618d0d85dadaf00c5b43ebf383eb
 
-// =============================================
-// AUTH ROUTES (Guest only)
-// =============================================
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
+    Route::get('/profile',function(){
+        return view('profile');
+    });
 });
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
@@ -37,9 +42,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/control/toggle', [DeviceControlController::class, 'toggle'])->name('control.toggle');
 
     // Deteksi anomali
-    Route::get('/anomalies', [AnomalyController::class, 'index'])->name('anomalies');
-    Route::post('/anomalies/{anomaly}/resolve', [AnomalyController::class, 'resolve'])->name('anomalies.resolve');
-
+    Route::get('/anomalies', [DeteksiHamaController::class, 'index'])->name('anomalies');
+  
     // Riwayat sensor
     Route::get('/history', [SensorHistoryController::class, 'index'])->name('history');
 
