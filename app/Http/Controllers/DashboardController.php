@@ -24,6 +24,7 @@ class DashboardController extends Controller
 
         $unresolvedAnomalies = Anomaly::whereNull('resolved_at')->count();
 
+        // Data chart 24 jam: ph, suhu, ppm, water_level
         $chartData = SensorData::where('recorded_at', '>=', Carbon::now()->subHours(24))
             ->orderBy('recorded_at', 'asc')
             ->get()
@@ -32,38 +33,67 @@ class DashboardController extends Controller
             })
             ->map(function ($group) {
                 return [
-                    'ph' => round($group->avg('ph'), 2),
-                    'suhu' => round($group->avg('suhu'), 2),
-                    'ppm' => round($group->avg('ppm'), 2),
+                    'ph'          => round($group->avg('ph'), 2),
+                    'suhu'        => round($group->avg('suhu'), 2),
+                    'ppm'         => round($group->avg('ppm'), 2),
+                    'water_level' => round($group->avg('water_level'), 2),
+                    'voltage'     => round($group->avg('voltage'), 2),
+                    'power'       => round($group->avg('power'), 2),
                 ];
             });
 
         $pumpDevices = Device::where('type', 'actuator')->get();
 
-        $nutrisiPump = $pumpDevices->first(function ($d) {
-            return str_contains(strtolower($d->name), 'nutrisi');
-        });
-        $hamaPump = $pumpDevices->first(function ($d) {
-            return str_contains(strtolower($d->name), 'hama') || str_contains(strtolower($d->name), 'pembasmi');
+        // Pompa Sirkulasi (mini waterpump) — dikontrol dari website
+        $circPump = $pumpDevices->first(function ($d) {
+            return str_contains(strtolower($d->device_id), 'sirkulasi')
+                || str_contains(strtolower($d->name), 'sirkulasi')
+                || str_contains(strtolower($d->name), 'circulation');
         });
 
-        $nutrisiLogs = $nutrisiPump
+        // Pompa Peristaltik (nutrisi otomatis)
+        $periPump = $pumpDevices->first(function ($d) {
+            return str_contains(strtolower($d->device_id), 'peristaltik')
+                || str_contains(strtolower($d->name), 'peristaltik');
+        });
+
+        // Log riwayat sirkulasi
+        $circLogs = $circPump
             ? DeviceLog::with('user')
-                ->where('device_id', $nutrisiPump->id)
-                ->whereIn('action', ['pump_on', 'pump_off'])
+                ->where('device_id', $circPump->id)
+                ->whereIn('action', ['circulation_on', 'circulation_off'])
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
                 ->get()
             : collect([]);
 
-        $hamaLogs = $hamaPump
+        // Log riwayat peristaltik
+        $periLogs = $periPump
             ? DeviceLog::with('user')
-                ->where('device_id', $hamaPump->id)
-                ->whereIn('action', ['spray_on', 'spray_off', 'pump_on', 'pump_off'])
+                ->where('device_id', $periPump->id)
+                ->whereIn('action', ['peristaltic_on', 'peristaltic_off'])
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
                 ->get()
             : collect([]);
+
+        // Status sirkulasi (apakah pompa sedang ON atau OFF berdasarkan log terakhir)
+        $circLastLog = $circPump
+            ? DeviceLog::where('device_id', $circPump->id)
+                ->whereIn('action', ['circulation_on', 'circulation_off'])
+                ->orderBy('created_at', 'desc')
+                ->first()
+            : null;
+        $circIsOn = $circLastLog && $circLastLog->action === 'circulation_on';
+
+        // Status peristaltik
+        $periLastLog = $periPump
+            ? DeviceLog::where('device_id', $periPump->id)
+                ->whereIn('action', ['peristaltic_on', 'peristaltic_off'])
+                ->orderBy('created_at', 'desc')
+                ->first()
+            : null;
+        $periIsOn = $periLastLog && $periLastLog->action === 'peristaltic_on';
 
         return view('dashboard', compact(
             'latestSensor',
@@ -72,10 +102,12 @@ class DashboardController extends Controller
             'unresolvedAnomalies',
             'chartData',
             'pumpDevices',
-            'nutrisiPump',
-            'hamaPump',
-            'nutrisiLogs',
-            'hamaLogs'
+            'circPump',
+            'periPump',
+            'circLogs',
+            'periLogs',
+            'circIsOn',
+            'periIsOn'
         ));
     }
 
@@ -87,24 +119,19 @@ class DashboardController extends Controller
 
         $devices = Device::all()->map(function ($device) {
             return [
-                'id' => $device->id,
-                'name' => $device->name,
-                'is_online' => $device->is_online,
+                'id'             => $device->id,
+                'name'           => $device->name,
+                'is_online'      => $device->is_online,
                 'last_heartbeat' => $device->last_heartbeat?->diffForHumans(),
             ];
         });
 
-        $recentChart = SensorData::where('recorded_at', '>=', Carbon::now()->subHour())
-            ->orderBy('recorded_at', 'asc')
-            ->get(['ph', 'suhu', 'ppm', 'recorded_at']);
-
         $configs = PlantConfig::all()->keyBy('parameter');
 
         return response()->json([
-            'sensor' => $latest,
+            'sensor'  => $latest,
             'configs' => $configs,
             'devices' => $devices,
-            'chart' => $recentChart,
         ]);
     }
 }

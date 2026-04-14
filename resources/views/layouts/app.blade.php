@@ -31,7 +31,7 @@
         </button>
         <div>
             <a href="{{ route('dashboard') }}" class="sidebar-logo">
-                <span class="text-primary-light fw-bold fs-5 ms-2">🌱 Smart Pakcoy</span>
+                <span class="fw-bold fs-5 ms-2" style="font-family:'Poppins',sans-serif;color:var(--primary-color,#45a049);">Smart Pakcoy</span>
             </a>
         </div>
         <div class="sidebar-menu-area">
@@ -61,6 +61,12 @@
                     <a href="{{ route('configs.index') }}">
                         <iconify-icon icon="icon-park-outline:setting-two" class="menu-icon"></iconify-icon>
                         <span>Konfigurasi</span>
+                    </a>
+                </li>
+                <li class="mt-4">
+                    <a href="/">
+                        <iconify-icon icon="solar:arrow-left-outline" class="menu-icon"></iconify-icon>
+                        <span>Kembali ke Beranda</span>
                     </a>
                 </li>
             </ul>

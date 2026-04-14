@@ -6,14 +6,13 @@ use App\Http\Controllers\SensorHistoryController;
 use App\Http\Controllers\DeviceControlController;
 use App\Http\Controllers\AnomalyController;
 use App\Http\Controllers\PlantConfigController;
+use App\Http\Controllers\LandingController;
 use Illuminate\Support\Facades\Route;
 
 /* |-------------------------------------------------------------------------- | Smart Pakcoy Hidroponik — Web Routes |-------------------------------------------------------------------------- */
 
-// Redirect root ke login atau dashboard
-Route::get('/', function () {
-    return auth()->check() ? redirect('/dashboard') : redirect('/login');
-});
+// Landing page — halaman pertama yang dikunjungi
+Route::get('/', [LandingController::class, 'index'])->name('landing');
 
 // =============================================
 // AUTH ROUTES (Guest only)
@@ -47,4 +46,9 @@ Route::middleware('auth')->group(function () {
     // Konfigurasi Ambang Batas
     Route::get('/configs', [PlantConfigController::class, 'index'])->name('configs.index');
     Route::post('/configs', [PlantConfigController::class, 'update'])->name('configs.update');
+
+    // Preset Konfigurasi
+    Route::post('/configs/presets/apply',        [PlantConfigController::class, 'applyPreset'])->name('configs.preset.apply');
+    Route::post('/configs/presets',              [PlantConfigController::class, 'storePreset'])->name('configs.preset.store');
+    Route::delete('/configs/presets/{preset}',   [PlantConfigController::class, 'destroyPreset'])->name('configs.preset.destroy');
 });

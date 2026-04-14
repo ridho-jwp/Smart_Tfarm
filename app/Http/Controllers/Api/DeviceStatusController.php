@@ -15,31 +15,54 @@ class DeviceStatusController extends Controller
             'device_id' => 'required|string',
         ]);
 
+        // Deteksi otomatis tipe device: pompa = actuator, sensor = sensor
+        $deviceId   = strtolower($validated['device_id']);
+        $isActuator = str_contains($deviceId, 'pump')
+                   || str_contains($deviceId, 'sirkulasi')
+                   || str_contains($deviceId, 'peristaltik')
+                   || str_contains($deviceId, 'relay');
+
+        // Nama yang lebih ramah berdasarkan device_id
+        $nameMap = [
+            'esp32-pump-sirkulasi'   => 'Mini Waterpump (Sirkulasi)',
+            'esp32-pump-peristaltik' => 'Pompa Peristaltik (Nutrisi)',
+        ];
+        $friendlyName = $nameMap[$deviceId] ?? ('Device ' . $validated['device_id']);
+
         $device = Device::firstOrCreate(
             ['device_id' => $validated['device_id']],
             [
-                'name' => 'Device ' . $validated['device_id'],
-                'type' => 'sensor',
+                'name' => $friendlyName,
+                'type' => $isActuator ? 'actuator' : 'sensor',
             ]
         );
 
         $device->update([
-            'is_online' => true,
+            'is_online'      => true,
             'last_heartbeat' => now(),
         ]);
 
         DeviceLog::create([
             'device_id' => $device->id,
-            'action' => 'heartbeat',
+            'action'    => 'heartbeat',
         ]);
 
         return response()->json([
-            'success' => true,
-            'message' => 'Heartbeat diterima.',
+            'success'     => true,
+            'message'     => 'Heartbeat diterima.',
             'server_time' => now()->toISOString(),
         ]);
     }
 
+    /**
+     * ESP32 polling command terbaru untuk devicenya.
+     * GET /api/v1/command/{deviceId}
+     *
+     * Mendukung aksi:
+     *   - circulation_on  / circulation_off  (mini waterpump)
+     *   - peristaltic_on  / peristaltic_off  (pompa peristaltik)
+     *   - pump_on         / pump_off          (legacy)
+     */
     public function getCommand(string $deviceId)
     {
         $device = Device::where('device_id', $deviceId)->first();
@@ -51,15 +74,25 @@ class DeviceStatusController extends Controller
             ], 404);
         }
 
+        // Semua jenis action yang bisa dikendalikan
+        $commandActions = [
+            'circulation_on',
+            'circulation_off',
+            'peristaltic_on',
+            'peristaltic_off',
+            'pump_on',
+            'pump_off',
+        ];
+
         $latestCommand = DeviceLog::where('device_id', $device->id)
-            ->whereIn('action', ['pump_on', 'pump_off'])
+            ->whereIn('action', $commandActions)
             ->orderBy('created_at', 'desc')
             ->first();
 
         return response()->json([
-            'success' => true,
-            'command' => $latestCommand ? $latestCommand->action : null,
-            'payload' => $latestCommand?->payload,
+            'success'   => true,
+            'command'   => $latestCommand ? $latestCommand->action : null,
+            'payload'   => $latestCommand?->payload,
             'issued_at' => $latestCommand?->created_at?->toISOString(),
         ]);
     }
