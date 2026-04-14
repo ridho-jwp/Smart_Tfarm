@@ -22,7 +22,7 @@ class DashboardController extends Controller
 
         $devices = Device::all();
 
-        $unresolvedAnomalies = Anomaly::whereNull('resolved_at')->count();
+        // $unresolvedAnomalies = Anomaly::whereNull('resolved_at')->count();
 
         $chartData = SensorData::where('recorded_at', '>=', Carbon::now()->subHours(24))
             ->orderBy('recorded_at', 'asc')
@@ -69,7 +69,7 @@ class DashboardController extends Controller
             'latestSensor',
             'configs',
             'devices',
-            'unresolvedAnomalies',
+            // 'unresolvedAnomalies',
             'chartData',
             'pumpDevices',
             'nutrisiPump',

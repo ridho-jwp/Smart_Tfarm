@@ -4,23 +4,21 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SensorHistoryController;
 use App\Http\Controllers\DeviceControlController;
-use App\Http\Controllers\AnomalyController;
+use App\Http\Controllers\DeteksiHamaController;
 use App\Http\Controllers\PlantConfigController;
 use Illuminate\Support\Facades\Route;
 
-/* |-------------------------------------------------------------------------- | Smart Pakcoy Hidroponik — Web Routes |-------------------------------------------------------------------------- */
 
-// Redirect root ke login atau dashboard
 Route::get('/', function () {
-    return auth()->check() ? redirect('/dashboard') : redirect('/login');
+    return auth()->check() ? redirect('/dashboard') : redirect('/profile');
 });
 
-// =============================================
-// AUTH ROUTES (Guest only)
-// =============================================
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
+    Route::get('/profile',function(){
+        return view('profile');
+    });
 });
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
@@ -38,9 +36,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/control/toggle', [DeviceControlController::class, 'toggle'])->name('control.toggle');
 
     // Deteksi anomali
-    Route::get('/anomalies', [AnomalyController::class, 'index'])->name('anomalies');
-    Route::post('/anomalies/{anomaly}/resolve', [AnomalyController::class, 'resolve'])->name('anomalies.resolve');
-
+    Route::get('/anomalies', [DeteksiHamaController::class, 'index'])->name('anomalies');
+  
     // Riwayat sensor
     Route::get('/history', [SensorHistoryController::class, 'index'])->name('history');
 

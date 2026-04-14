@@ -455,7 +455,7 @@
         <div class="card-body">
             <div class="d-flex align-items-center justify-content-between mb-20">
                 <h6 class="fw-semibold mb-0">📡 Status Perangkat</h6>
-                @if($unresolvedAnomalies > 0)
+                {{-- @if($unresolvedAnomalies > 0)
                     <span class="badge bg-danger-focus text-danger-main rounded-pill px-12 py-4">
                         {{ $unresolvedAnomalies }} Hama Aktif
                     </span>
@@ -463,7 +463,7 @@
                     <span class="badge bg-success-focus text-success-main rounded-pill px-12 py-4">
                         Kondisi Aman
                     </span>
-                @endif
+                @endif --}}
             </div>
             <div class="row gy-4">
                 @forelse($devices as $device)
