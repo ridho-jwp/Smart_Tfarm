@@ -10,19 +10,16 @@ use App\Http\Controllers\LandingController;
 use Illuminate\Support\Facades\Route;
 
 
-<<<<<<< HEAD
 // Landing page — halaman pertama yang dikunjungi
-Route::get('/', [LandingController::class, 'index'])->name('landing');
-=======
+Route::get('/dasboard', [LandingController::class, 'index'])->name('landing');
 Route::get('/', function () {
     return auth()->check() ? redirect('/dashboard') : redirect('/profile');
 });
->>>>>>> e66dddaef6b7618d0d85dadaf00c5b43ebf383eb
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
-    Route::get('/profile',function(){
+    Route::get('/profile', function () {
         return view('profile');
     });
 });
@@ -43,7 +40,7 @@ Route::middleware('auth')->group(function () {
 
     // Deteksi anomali
     Route::get('/anomalies', [DeteksiHamaController::class, 'index'])->name('anomalies');
-  
+
     // Riwayat sensor
     Route::get('/history', [SensorHistoryController::class, 'index'])->name('history');
 
@@ -52,7 +49,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/configs', [PlantConfigController::class, 'update'])->name('configs.update');
 
     // Preset Konfigurasi
-    Route::post('/configs/presets/apply',        [PlantConfigController::class, 'applyPreset'])->name('configs.preset.apply');
-    Route::post('/configs/presets',              [PlantConfigController::class, 'storePreset'])->name('configs.preset.store');
-    Route::delete('/configs/presets/{preset}',   [PlantConfigController::class, 'destroyPreset'])->name('configs.preset.destroy');
+    Route::post('/configs/presets/apply', [PlantConfigController::class, 'applyPreset'])->name('configs.preset.apply');
+    Route::post('/configs/presets', [PlantConfigController::class, 'storePreset'])->name('configs.preset.store');
+    Route::delete('/configs/presets/{preset}', [PlantConfigController::class, 'destroyPreset'])->name('configs.preset.destroy');
 });

@@ -443,16 +443,11 @@
     <div class="card">
         <div class="card-body">
             <div class="d-flex align-items-center justify-content-between mb-20">
-<<<<<<< HEAD
                 <h6 class="fw-semibold mb-0 d-flex align-items-center gap-2">
                     <iconify-icon icon="mdi:broadcast" class="text-info-main"></iconify-icon>
                     Status Perangkat
                 </h6>
-                @if($unresolvedAnomalies > 0)
-=======
-                <h6 class="fw-semibold mb-0">📡 Status Perangkat</h6>
                 {{-- @if($unresolvedAnomalies > 0)
->>>>>>> e66dddaef6b7618d0d85dadaf00c5b43ebf383eb
                     <span class="badge bg-danger-focus text-danger-main rounded-pill px-12 py-4">
                         {{ $unresolvedAnomalies }} Anomali Aktif
                     </span>
