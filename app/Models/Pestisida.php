@@ -11,6 +11,7 @@ class Pestisida extends Model
         'id_preset',
         'dosis',
         'deskripsi',
+        'status',
     ];
     public $timestamps = true;
 }

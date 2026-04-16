@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\Route;
 
 
 // Landing page — halaman pertama yang dikunjungi
-// Route::get('/', [LandingController::class, 'index'])->name('landing');
-Route::get('/', function () {
-    return auth()->check() ? redirect('/dashboard') : redirect('/profile');
-});
+Route::get('/', [LandingController::class, 'index'])->name('landing');
+// Route::get('/', function () {
+//     return auth()->check() ? redirect('/dashboard') : redirect('/profile');
+// });
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
