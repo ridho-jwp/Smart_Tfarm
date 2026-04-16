@@ -7,14 +7,12 @@ use App\Http\Controllers\DeviceControlController;
 use App\Http\Controllers\DeteksiHamaController;
 use App\Http\Controllers\PlantConfigController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\PestisidaController;
 use Illuminate\Support\Facades\Route;
 
 
 // Landing page — halaman pertama yang dikunjungi
-Route::get('/dasboard', [LandingController::class, 'index'])->name('landing');
-Route::get('/', function () {
-    return auth()->check() ? redirect('/dashboard') : redirect('/profile');
-});
+Route::get('/', [LandingController::class, 'index'])->name('landing');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -49,7 +47,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/configs', [PlantConfigController::class, 'update'])->name('configs.update');
 
     // Preset Konfigurasi
-    Route::post('/configs/presets/apply', [PlantConfigController::class, 'applyPreset'])->name('configs.preset.apply');
-    Route::post('/configs/presets', [PlantConfigController::class, 'storePreset'])->name('configs.preset.store');
-    Route::delete('/configs/presets/{preset}', [PlantConfigController::class, 'destroyPreset'])->name('configs.preset.destroy');
+    Route::post('/configs/presets/apply',        [PlantConfigController::class, 'applyPreset'])->name('configs.preset.apply');
+    Route::post('/configs/presets',              [PlantConfigController::class, 'storePreset'])->name('configs.preset.store');
+    Route::put('/configs/presets/{preset}',      [PlantConfigController::class, 'updatePreset'])->name('configs.preset.update');
+    Route::delete('/configs/presets/{preset}',   [PlantConfigController::class, 'destroyPreset'])->name('configs.preset.destroy');
+
+    // Pestisida Konfigurasi
+    Route::get('/configs/pestisida/{id}', [PestisidaController::class, 'index'])->name('configs.pestisida');
+    Route::post('/configs/pestisida/{id}', [PestisidaController::class, 'create'])->name('pestisida.store');
 });

@@ -7,6 +7,8 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if(!Schema::hasTable('hamadetection')) {
+
         Schema::create('hamadetection', function (Blueprint $table) {
             $table->id('id_analisis'); 
             
@@ -15,7 +17,9 @@ return new class extends Migration
             $table->float('confidence');
             $table->boolean('is_pestisida_pump')->default(false);
             $table->timestamps(); 
-        });
+        }
+        );
+        }
     }
 
     public function down(): void
