@@ -46,8 +46,8 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link d-flex align-items-center gap-2" id="tab-manual-btn" data-bs-toggle="pill"
                 data-bs-target="#tab-manual" type="button">
-                <iconify-icon icon="solar:pen-outline" class="text-lg"></iconify-icon>
-                hi
+                <iconify-icon icon="solar:waterdrop-outline" class="text-lg"></iconify-icon>
+                Ketinggian Air
             </button>
         </li>
     </ul>
@@ -79,6 +79,11 @@
                         <h6 class="fw-semibold mb-16 d-flex align-items-center gap-2">
                             <iconify-icon icon="solar:settings-outline" class="text-primary-600"></iconify-icon>
                             Konfigurasi Sensor Aktif Saat Ini
+                            @if($activePreset)
+                                <span class="badge bg-success-focus text-success-main text-xs ms-2 border border-success">Preset Aktif: {{ $activePreset->name }}</span>
+                            @else
+                                <span class="badge bg-warning-focus text-warning-main text-xs ms-2">Kustom / Manual</span>
+                            @endif
                         </h6>
                         <div class="row gy-3 text-sm">
                             @php
@@ -133,16 +138,20 @@
                         <div class="row gy-16">
                             @foreach ($presets as $preset)
                                 <div class="col-sm-6 col-xl-3">
-                                    <div class="border radius-12 p-20 h-100 d-flex flex-column preset-card"
-                                        style="transition:box-shadow .2s,border-color .2s;">
+                                    <div class="border radius-12 p-20 h-100 d-flex flex-column preset-card @if($activePreset && $activePreset->id == $preset->id) border-success @endif"
+                                        style="transition:box-shadow .2s,border-color .2s; @if($activePreset && $activePreset->id == $preset->id) background: var(--success-50, #f0fdf4); @endif">
 
-                                        @if ($preset->is_default)
-                                            <span
-                                                class="badge bg-primary-100 text-primary-600 text-xs mb-12 align-self-start">Bawaan</span>
-                                        @else
-                                            <span
-                                                class="badge bg-success-focus text-success-main text-xs mb-12 align-self-start">Kustom</span>
-                                        @endif
+                                        <div class="d-flex gap-2 mb-12 align-self-start">
+                                            @if ($preset->is_default)
+                                                <span class="badge bg-primary-100 text-primary-600 text-xs">Bawaan</span>
+                                            @else
+                                                <span class="badge bg-success-focus text-success-main text-xs">Kustom</span>
+                                            @endif
+                                            
+                                            @if($activePreset && $activePreset->id == $preset->id)
+                                                <span class="badge bg-success text-white text-xs">Sedang Digunakan</span>
+                                            @endif
+                                        </div>
 
                                         <h6 class="fw-bold mb-4">{{ $preset->name }}</h6>
                                         <p class="text-secondary-light text-xs mb-16 flex-grow-1">
@@ -195,16 +204,16 @@
 
                                             </a>
 
-                                            {{-- Tombol 2: Nonaktifkan --}}
-                                            <form action="" method="POST" class="w-50 m-0">
+                                            {{-- Tombol 2: Aktifkan --}}
+                                            <form action="{{ route('configs.preset.apply') }}" method="POST" class="w-50 m-0">
                                                 @csrf
                                                 <input type="hidden" name="preset_id" value="{{ $preset->id }}">
                                                 <button type="submit"
-                                                    class="d-flex flex-column align-items-center justify-content-center w-100 py-12 bg-orange-600 rounded-xl text-white border-0 transition-opacity hover-opacity-90"
-                                                    style="background-color: #ea580c !important;">
-                                                    <iconify-icon icon="solar:power-bold"
+                                                    class="d-flex flex-column align-items-center justify-content-center w-100 py-12 rounded-xl text-white border-0 transition-opacity hover-opacity-90"
+                                                    style="background-color: #16a34a !important;">
+                                                    <iconify-icon icon="solar:bolt-bold"
                                                         class="text-xl mb-4"></iconify-icon>
-                                                    <span class="text-xs fw-medium">Nonaktifkan</span>
+                                                    <span class="text-xs fw-medium">Aktifkan</span>
                                                 </button>
                                             </form>
 
@@ -289,6 +298,13 @@
                                                                     <iconify-icon icon="solar:bolt-outline"></iconify-icon>
                                                                 </button>
                                                             </form>
+                                                            <button type="button" class="btn btn-warning-focus btn-sm radius-8 btn-edit-preset"
+                                                                title="Edit preset"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#editPresetModal"
+                                                                data-preset="{{ json_encode($preset) }}">
+                                                                <iconify-icon icon="solar:pen-bold" class="text-warning-main"></iconify-icon>
+                                                            </button>
                                                             <form action="{{ route('configs.preset.destroy', $preset) }}"
                                                                 method="POST"
                                                                 onsubmit="return confirm('Hapus preset « {{ $preset->name }} »?')">
@@ -487,114 +503,57 @@
                             <form action="{{ route('configs.update') }}" method="POST" class="needs-decimal-fix">
                                 @csrf
 
-                                @php
-                                    $manualParams = [
-                                        [
-                                            'key' => 'ph',
-                                            'label' => 'pH Air',
-                                            'icon' => 'fluent:drop-20-filled',
-                                            'color' => 'info',
-                                            'unit' => '',
-                                            'desc' => 'Tingkat keasaman larutan nutrisi (0–14)',
-                                            'step' => '0.1',
-                                            'decimal' => true,
-                                        ],
-                                        [
-                                            'key' => 'suhu',
-                                            'label' => 'Suhu Air',
-                                            'icon' => 'mdi:thermometer',
-                                            'color' => 'warning',
-                                            'unit' => '°C',
-                                            'desc' => 'Suhu larutan nutrisi',
-                                            'step' => '0.5',
-                                            'decimal' => true,
-                                        ],
-                                        [
-                                            'key' => 'ppm',
-                                            'label' => 'PPM Nutrisi',
-                                            'icon' => 'mdi:flask',
-                                            'color' => 'success',
-                                            'unit' => 'ppm',
-                                            'desc' => 'Konsentrasi larutan nutrisi',
-                                            'step' => '10',
-                                            'decimal' => false,
-                                        ],
-                                        [
-                                            'key' => 'ketinggian_air',
-                                            'label' => 'Ketinggian Air Tandon',
-                                            'icon' => 'mdi:water-pump',
-                                            'color' => 'primary',
-                                            'unit' => 'cm',
-                                            'desc' => 'Batas ketinggian air tandon (kontrol pompa isi)',
-                                            'step' => '0.5',
-                                            'decimal' => true,
-                                        ],
-                                    ];
-                                @endphp
-
-                                @foreach ($manualParams as $param)
-                                    @php $cfg = $configs[$param['key']] ?? null; @endphp
-                                    <div class="border radius-12 p-24 mb-24">
-                                        <div class="d-flex align-items-center gap-3 mb-20">
-                                            <div
-                                                class="w-40-px h-40-px bg-{{ $param['color'] }}-focus text-{{ $param['color'] }}-main rounded-circle d-flex justify-content-center align-items-center">
-                                                <iconify-icon icon="{{ $param['icon'] }}" class="text-lg"></iconify-icon>
-                                            </div>
-                                            <div>
-                                                <h6 class="fw-semibold mb-0">{{ $param['label'] }}</h6>
-                                                <p class="text-xs text-secondary-light mb-0">{{ $param['desc'] }}
-                                                    @if ($cfg && $cfg->unit)
-                                                        · Satuan: <strong>{{ $cfg->unit }}</strong>
-                                                    @endif
-                                                </p>
-                                            </div>
+                                @php $cfg = $configs['ketinggian_air'] ?? null; @endphp
+                                <div class="border radius-12 p-24 mb-24">
+                                    <div class="d-flex align-items-center gap-3 mb-20">
+                                        <div
+                                            class="w-40-px h-40-px bg-primary-focus text-primary-main rounded-circle d-flex justify-content-center align-items-center">
+                                            <iconify-icon icon="mdi:water-pump" class="text-lg"></iconify-icon>
                                         </div>
-                                        <div class="row gy-3">
-                                            <div class="col-sm-6">
-                                                <label
-                                                    class="form-label text-sm fw-medium text-secondary-light text-uppercase">Batas
-                                                    Minimum</label>
-                                                <div class="input-group">
-                                                    <input type="text"
-                                                        inputmode="{{ $param['decimal'] ? 'decimal' : 'numeric' }}"
-                                                        name="{{ $param['key'] }}_min"
-                                                        value="{{ $cfg ? number_format($cfg->min_optimal, $param['decimal'] ? 2 : 0, '.', '') : old($param['key'] . '_min') }}"
-                                                        class="form-control radius-8 {{ $param['decimal'] ? 'decimal-input' : 'integer-input' }} @error($param['key'] . '_min') is-invalid @enderror"
-                                                        placeholder="Minimum" required>
-                                                    @if ($param['unit'])
-                                                        <span
-                                                            class="input-group-text text-secondary-light">{{ $param['unit'] }}</span>
-                                                    @endif
-                                                </div>
-                                                @error($param['key'] . '_min')
-                                                    <span
-                                                        class="text-danger-main text-xs d-block mt-4">{{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <label
-                                                    class="form-label text-sm fw-medium text-secondary-light text-uppercase">Batas
-                                                    Maksimum</label>
-                                                <div class="input-group">
-                                                    <input type="text"
-                                                        inputmode="{{ $param['decimal'] ? 'decimal' : 'numeric' }}"
-                                                        name="{{ $param['key'] }}_max"
-                                                        value="{{ $cfg ? number_format($cfg->max_optimal, $param['decimal'] ? 2 : 0, '.', '') : old($param['key'] . '_max') }}"
-                                                        class="form-control radius-8 {{ $param['decimal'] ? 'decimal-input' : 'integer-input' }} @error($param['key'] . '_max') is-invalid @enderror"
-                                                        placeholder="Maksimum" required>
-                                                    @if ($param['unit'])
-                                                        <span
-                                                            class="input-group-text text-secondary-light">{{ $param['unit'] }}</span>
-                                                    @endif
-                                                </div>
-                                                @error($param['key'] . '_max')
-                                                    <span
-                                                        class="text-danger-main text-xs d-block mt-4">{{ $message }}</span>
-                                                @enderror
-                                            </div>
+                                        <div>
+                                            <h6 class="fw-semibold mb-0">Ketinggian Air Tandon</h6>
+                                            <p class="text-xs text-secondary-light mb-0">Batas ketinggian air tandon (kontrol pompa isi)
+                                                @if ($cfg && $cfg->unit)
+                                                    · Satuan: <strong>{{ $cfg->unit }}</strong>
+                                                @endif
+                                            </p>
                                         </div>
                                     </div>
-                                @endforeach
+                                    <div class="row gy-3">
+                                        <div class="col-sm-6">
+                                            <label
+                                                class="form-label text-sm fw-medium text-secondary-light text-uppercase">Batas Minimum</label>
+                                            <div class="input-group">
+                                                <input type="text"
+                                                    inputmode="decimal"
+                                                    name="ketinggian_air_min"
+                                                    value="{{ $cfg ? number_format($cfg->min_optimal, 2, '.', '') : old('ketinggian_air_min') }}"
+                                                    class="form-control radius-8 decimal-input @error('ketinggian_air_min') is-invalid @enderror"
+                                                    placeholder="Minimum" required>
+                                                <span class="input-group-text text-secondary-light">cm</span>
+                                            </div>
+                                            @error('ketinggian_air_min')
+                                                <span class="text-danger-main text-xs d-block mt-4">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <label
+                                                class="form-label text-sm fw-medium text-secondary-light text-uppercase">Batas Maksimum</label>
+                                            <div class="input-group">
+                                                <input type="text"
+                                                    inputmode="decimal"
+                                                    name="ketinggian_air_max"
+                                                    value="{{ $cfg ? number_format($cfg->max_optimal, 2, '.', '') : old('ketinggian_air_max') }}"
+                                                    class="form-control radius-8 decimal-input @error('ketinggian_air_max') is-invalid @enderror"
+                                                    placeholder="Maksimum" required>
+                                                <span class="input-group-text text-secondary-light">cm</span>
+                                            </div>
+                                            @error('ketinggian_air_max')
+                                                <span class="text-danger-main text-xs d-block mt-4">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <div class="d-flex align-items-center justify-content-between pt-8">
                                     <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary radius-8 px-20">
@@ -615,10 +574,100 @@
 
     </div>{{-- end tab-content --}}
 
+    {{-- ── Modal Edit Preset ─────────────────────────────────────────────────── --}}
+    <div class="modal fade" id="editPresetModal" tabindex="-1" aria-labelledby="editPresetModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content radius-12">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editPresetModalLabel">Edit Preset</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="formEditPreset" method="POST" action="" class="needs-decimal-fix">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-body p-24">
+                        <div class="mb-16">
+                            <label class="form-label text-sm fw-medium">Nama Preset <span class="text-danger-main">*</span></label>
+                            <input type="text" name="name" id="edit_name" class="form-control radius-8" required>
+                        </div>
+                        <div class="mb-16">
+                            <label class="form-label text-sm fw-medium">Deskripsi</label>
+                            <textarea name="description" id="edit_description" rows="2" class="form-control radius-8"></textarea>
+                        </div>
+                        
+                        <div class="row gy-3 mb-16 border-top pt-16 mt-8">
+                            <div class="col-12"><h6 class="text-secondary-light text-xs mb-0">pH Air</h6></div>
+                            <div class="col-6">
+                                <label class="form-label text-xs">Min</label>
+                                <input type="text" name="ph_min" id="edit_ph_min" class="form-control radius-8 decimal-input" inputmode="decimal" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label text-xs">Max</label>
+                                <input type="text" name="ph_max" id="edit_ph_max" class="form-control radius-8 decimal-input" inputmode="decimal" required>
+                            </div>
+                        </div>
+
+                        <div class="row gy-3 mb-16 border-top pt-16 mt-8">
+                            <div class="col-12"><h6 class="text-secondary-light text-xs mb-0">Suhu Air (°C)</h6></div>
+                            <div class="col-6">
+                                <label class="form-label text-xs">Min</label>
+                                <input type="text" name="suhu_min" id="edit_suhu_min" class="form-control radius-8 decimal-input" inputmode="decimal" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label text-xs">Max</label>
+                                <input type="text" name="suhu_max" id="edit_suhu_max" class="form-control radius-8 decimal-input" inputmode="decimal" required>
+                            </div>
+                        </div>
+
+                        <div class="row gy-3 mb-16 border-top pt-16 mt-8">
+                            <div class="col-12"><h6 class="text-secondary-light text-xs mb-0">PPM Nutrisi</h6></div>
+                            <div class="col-6">
+                                <label class="form-label text-xs">Min</label>
+                                <input type="text" name="ppm_min" id="edit_ppm_min" class="form-control radius-8 integer-input" inputmode="numeric" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label text-xs">Max</label>
+                                <input type="text" name="ppm_max" id="edit_ppm_max" class="form-control radius-8 integer-input" inputmode="numeric" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary radius-8" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary radius-8">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @push('scripts')
     <script>
+        // ── Modal Edit Handler ────────────────────────────────────────────────────
+        document.querySelectorAll('.btn-edit-preset').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const preset = JSON.parse(this.dataset.preset);
+                const form = document.getElementById('formEditPreset');
+                
+                // Format action URL
+                const baseUrl = '{{ route("configs.preset.update", 0) }}'.replace('/0', '/' + preset.id);
+                form.action = baseUrl;
+                
+                // Isi input fields
+                document.getElementById('edit_name').value = preset.name;
+                document.getElementById('edit_description').value = preset.description || '';
+                
+                // Parsing numbers
+                document.getElementById('edit_ph_min').value = parseFloat(preset.ph_min).toString();
+                document.getElementById('edit_ph_max').value = parseFloat(preset.ph_max).toString();
+                document.getElementById('edit_suhu_min').value = parseFloat(preset.suhu_min).toString();
+                document.getElementById('edit_suhu_max').value = parseFloat(preset.suhu_max).toString();
+                document.getElementById('edit_ppm_min').value = parseFloat(preset.ppm_min).toString();
+                document.getElementById('edit_ppm_max').value = parseFloat(preset.ppm_max).toString();
+            });
+        });
+
         // ── Aktifkan tab sesuai URL fragment ──────────────────────────────────────
         (function() {
             const hash = window.location.hash;

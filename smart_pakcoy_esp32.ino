@@ -1,6 +1,6 @@
 /*
  * ============================================================
- *  Smart Pakcoy Hidroponik — ESP32 Firmware v2.0
+ *  Smart Pakcoy Hidroponik — ESP32 Firmware v2.1
  *
  *  HARDWARE:
  *    - ESP32
@@ -9,6 +9,7 @@
  *    - TDS Sensor     → Analog (GPIO 35 / ADC1_CH7)
  *    - HC-SR04        → Ketinggian air tandon (TRIG=13, ECHO=12)
  *    - Relay 4ch 5V   → IN1=GPIO26 (Sirkulasi), IN2=GPIO27 (Peristaltik)
+ *    - PZEM-004T      → Monitor listrik (TX=GPIO17, RX=GPIO16 / Serial2)
  *
  *  LOGIKA OTOMATIS:
  *    - PPM/TDS < batas minimal → nyalakan pompa peristaltik 60 detik
@@ -20,6 +21,7 @@
  *    - DallasTemperature by Miles Burton
  *    - ArduinoJson       by Benoit Blanchon (v6.x)
  *    - HTTPClient        (built-in di ESP32 core)
+ *    - PZEM-004T        by Jakub Mandula (cari: "PZEM004T")
  * ============================================================
  */
 
@@ -28,6 +30,7 @@
 #include <ArduinoJson.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include <PZEM004Tv30.h>
 
 // ============================================================
 //  KONFIGURASI — UBAH SESUAI KEBUTUHAN
@@ -60,6 +63,13 @@ const char* PUMP_PERI_ID  = "ESP32-PUMP-PERISTALTIK"; // pompa peristaltik
 #define RELAY_CIRC     26   // IN1 → Mini Waterpump Sirkulasi (aktif LOW)
 #define RELAY_PERI     27   // IN2 → Pompa Peristaltik Nutrisi (aktif LOW)
 #define LED_PIN         2   // LED builtin ESP32
+
+// ── PZEM-004T (Serial2 ESP32) ──
+// Wiring: PZEM TX → ESP32 GPIO16 (RX2)
+//         PZEM RX → ESP32 GPIO17 (TX2)
+//         PZEM VCC/GND ke 5V dan GND ESP32
+#define PZEM_RX_PIN    16
+#define PZEM_TX_PIN    17
 
 // ============================================================
 //  KALIBRASI SENSOR
@@ -124,6 +134,9 @@ const unsigned long PERI_CMD_COOLDOWN = 65000UL; // cooldown 65 detik setelah po
 OneWire           oneWire(ONE_WIRE_BUS);
 DallasTemperature tempSensor(&oneWire);
 
+// PZEM-004T menggunakan Serial2 (UART2) ESP32
+PZEM004Tv30 pzem(Serial2, PZEM_RX_PIN, PZEM_TX_PIN);
+
 // ============================================================
 //  SETUP
 // ============================================================
@@ -133,7 +146,7 @@ void setup() {
     delay(500);
 
     Serial.println("\n====================================");
-    Serial.println("  Smart Pakcoy ESP32 v2.0 Booting");
+    Serial.println("  Smart Pakcoy ESP32 v2.1 Booting");
     Serial.println("====================================");
 
     // Inisialisasi pin
@@ -155,6 +168,11 @@ void setup() {
     // Mulai DS18B20
     tempSensor.begin();
     Serial.println("[OK] Sensor DS18B20 siap.");
+
+    // Inisialisasi Serial2 untuk PZEM-004T
+    Serial2.begin(9600, SERIAL_8N1, PZEM_RX_PIN, PZEM_TX_PIN);
+    delay(200);
+    Serial.println("[OK] Sensor PZEM-004T siap (Serial2).");
 
     // Koneksi WiFi
     connectWiFi();
@@ -319,6 +337,55 @@ float bacaTDS(float suhu) {
 //  FUNGSI: Baca Jarak Ultrasonik HC-SR04
 // ============================================================
 
+// ============================================================
+//  FUNGSI: Baca Sensor Listrik PZEM-004T
+// ============================================================
+
+struct DataListrik {
+    float voltage;      // Volt
+    float current;      // Ampere
+    float power;        // Watt
+    float energy;       // kWh
+    float frequency;    // Hz
+    float powerFactor;  // PF (0.0 - 1.0)
+    bool  valid;        // true jika pembacaan berhasil
+};
+
+DataListrik bacaListrik() {
+    DataListrik data;
+    data.valid = false;
+
+    float v  = pzem.voltage();
+    float c  = pzem.current();
+    float p  = pzem.power();
+    float e  = pzem.energy();
+    float f  = pzem.frequency();
+    float pf = pzem.pf();
+
+    // PZEM mengembalikan NaN jika tidak ada koneksi / error
+    if (isnan(v) || isnan(c) || isnan(p)) {
+        Serial.println("[PZEM] Gagal baca! Periksa kabel & alamat PZEM.");
+        return data;
+    }
+
+    data.voltage     = roundf(v  * 100) / 100.0;
+    data.current     = roundf(c  * 1000) / 1000.0;
+    data.power       = roundf(p  * 100) / 100.0;
+    data.energy      = isnan(e)  ? 0.0 : roundf(e  * 1000) / 1000.0;
+    data.frequency   = isnan(f)  ? 0.0 : roundf(f  * 100)  / 100.0;
+    data.powerFactor = isnan(pf) ? 0.0 : roundf(pf * 100)  / 100.0;
+    data.valid       = true;
+
+    Serial.printf("[PZEM] Tegangan  : %.2f V\n",  data.voltage);
+    Serial.printf("[PZEM] Arus      : %.3f A\n",  data.current);
+    Serial.printf("[PZEM] Daya      : %.2f W\n",  data.power);
+    Serial.printf("[PZEM] Energi    : %.3f kWh\n",data.energy);
+    Serial.printf("[PZEM] Frekuensi : %.2f Hz\n", data.frequency);
+    Serial.printf("[PZEM] PF        : %.2f\n",    data.powerFactor);
+
+    return data;
+}
+
 float bacaJarak() {
     digitalWrite(TRIG_PIN, LOW);
     delayMicroseconds(2);
@@ -391,11 +458,20 @@ void sendSensorData() {
     float ppm   = bacaTDS(suhu);
     float jarak = bacaJarak();
 
+    // ── Baca PZEM-004T ──
+    DataListrik listrik = bacaListrik();
+
     Serial.println("\n===== [KIRIM DATA SENSOR] =====");
     Serial.printf("  Suhu   : %.2f°C\n", suhu);
     Serial.printf("  pH     : %.2f\n", ph);
     Serial.printf("  TDS    : %.2f ppm\n", ppm);
     Serial.printf("  Jarak  : %.2f cm\n", jarak);
+    if (listrik.valid) {
+        Serial.printf("  Listrik: %.2fV / %.3fA / %.2fW / %.3fkWh\n",
+            listrik.voltage, listrik.current, listrik.power, listrik.energy);
+    } else {
+        Serial.println("  Listrik: -- (PZEM tidak respon)");
+    }
     Serial.println("================================");
 
     // ── Logika: PPM rendah → nyalakan pompa peristaltik otomatis ──
@@ -421,13 +497,24 @@ void sendSensorData() {
     http.addHeader("X-API-Key", API_KEY);
     http.setTimeout(10000);
 
-    StaticJsonDocument<512> doc;
+    // Gunakan DynamicJsonDocument karena data lebih banyak
+    DynamicJsonDocument doc(512);
     doc["device_id"] = DEVICE_ID;
 
     if (suhu != -127.0)   doc["suhu"]        = roundf(suhu * 100) / 100.0;
     if (ph >= 0)          doc["ph"]           = roundf(ph * 100) / 100.0;
     if (ppm >= 0)         doc["ppm"]          = roundf(ppm * 100) / 100.0;
     if (jarak > 0)        doc["water_level"]  = roundf(jarak * 100) / 100.0;
+
+    // ── Data PZEM-004T (hanya kirim jika pembacaan valid) ──
+    if (listrik.valid) {
+        doc["voltage"]      = listrik.voltage;
+        doc["current"]      = listrik.current;
+        doc["power"]        = listrik.power;
+        doc["energy"]       = listrik.energy;
+        doc["frequency"]    = listrik.frequency;
+        doc["power_factor"] = listrik.powerFactor;
+    }
 
     // Status relay
     doc["pump_circ_on"] = circOn;

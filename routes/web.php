@@ -20,7 +20,7 @@ Route::get('/', [LandingController::class, 'index'])->name('landing');
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
-    Route::get('/profile',function(){
+    Route::get('/profile', function () {
         return view('profile');
     });
 });
@@ -41,7 +41,7 @@ Route::middleware('auth')->group(function () {
 
     // Deteksi anomali
     Route::get('/anomalies', [DeteksiHamaController::class, 'index'])->name('anomalies');
-  
+
     // Riwayat sensor
     Route::get('/history', [SensorHistoryController::class, 'index'])->name('history');
 
@@ -52,11 +52,10 @@ Route::middleware('auth')->group(function () {
     // Preset Konfigurasi
     Route::post('/configs/presets/apply',        [PlantConfigController::class, 'applyPreset'])->name('configs.preset.apply');
     Route::post('/configs/presets',              [PlantConfigController::class, 'storePreset'])->name('configs.preset.store');
+    Route::put('/configs/presets/{preset}',      [PlantConfigController::class, 'updatePreset'])->name('configs.preset.update');
     Route::delete('/configs/presets/{preset}',   [PlantConfigController::class, 'destroyPreset'])->name('configs.preset.destroy');
 
-
-
-
-    Route::get('/configs/pestisida/{id}',[PestisidaController::class,'index'])->name('configs.pestisida');
-    Route::post('/configs/pestisida/{id}',[PestisidaController::class,'create'])->name('pestisida.store');
+    // Pestisida Konfigurasi
+    Route::get('/configs/pestisida/{id}', [PestisidaController::class, 'index'])->name('configs.pestisida');
+    Route::post('/configs/pestisida/{id}', [PestisidaController::class, 'create'])->name('pestisida.store');
 });
