@@ -26,27 +26,38 @@ class PestisidaController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-        public function create(Request $request)
-        {
-            $validasi = $request->validate([
-                'id_preset' => 'required|exists:config_presets,id',
-                'dosis' => 'required|numeric',
-                'deskripsi'=>'nullable|string',
-            ]);
-            $pestisida = Pestisida::create([
-                'id_preset' => $validasi['id_preset'],
-                'dosis' => $validasi['dosis'],
-                'deskripsi' => $validasi['deskripsi'] ?? null,
-            ]);
-            return redirect()->route('configs.index')->with('success','Penambahan pestisida berhasil di buat',201);
-        // return response()->json([
-        //     'message' => 'Permintaan berhasil di buat',
-        //     'data' => $pestisida,
-        // ],201);
-
-
+    public function create(Request $request)
+    {
+        $validasi = $request->validate([
+            'id_preset' => 'required|exists:config_presets,id',
+            'dosis' => 'required|numeric',
+            'deskripsi' => 'nullable|string',
+        ]);
+        $pestisida = Pestisida::create([
+            'id_preset' => $validasi['id_preset'],
+            'dosis' => $validasi['dosis'],
+            'deskripsi' => $validasi['deskripsi'] ?? null,
+            'status' => 'pending',
+        ]);
+        return redirect()->route('configs.index')->with('success', 'Penambahan pestisida berhasil di buat', 201);
     }
 
+    public function mainPestisida(Request $request)
+    {
+        $pestisida = Pestisida::where('status', 'pending')->latest()->first();
+
+        $dosisDikeluarkan = 0;
+        if ($pestisida) {
+            $dosisDikeluarkan = $pestisida->dosis;
+
+            $pestisida->update(['status' => 'dikirim']);
+        }
+
+        return response()->json([
+            'status' => 'PUMP_ON',
+            'dosis' => (float) $dosisDikeluarkan,
+        ]);
+    }
     /**
      * Store a newly created resource in storage.
      */
