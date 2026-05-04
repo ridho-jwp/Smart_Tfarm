@@ -31,7 +31,7 @@
                     {{-- Image --}}
                     <div class="position-relative" style="height:200px; overflow:hidden; background:#f1f1f1; display:flex; align-items:center; justify-content:center;">
                         @if ($anomaly->image_url)
-                            <img src="{{ asset('storage/' . $anomaly->image_url) }}" alt="Hasil Deteksi"
+                            <img src="{{ $anomaly->image_url }}" alt="Hasil Deteksi"
                                 class="w-100 h-100 object-fit-cover">
                         @else
                             <div class="text-center">

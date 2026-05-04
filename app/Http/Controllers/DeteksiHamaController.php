@@ -12,10 +12,16 @@ class DeteksiHamaController extends Controller
      */
     public function index(Request $request)
     {
-        $data = DeteksiHama::all()->sortByDesc('created_at');
-        return view('anomalies',compact('data'));
-    }
+        $latest = DeteksiHama::latest()->first();
 
+        if (!$latest) {
+            return view('anomalies', ['data' => collect()]);
+        }
+
+        $data = DeteksiHama::where('session_id', $latest->session_id)->orderBy('created_at', 'desc')->get();
+
+        return view('anomalies', compact('data'));
+    }
     /**
      * Tandai anomali sebagai resolved.
      */
