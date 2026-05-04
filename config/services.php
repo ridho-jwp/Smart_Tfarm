@@ -44,4 +44,15 @@ return [
         'api_key' => env('ESP32_API_KEY', 'hidra-core-default-key'),
     ],
 
+    /*
+     |--------------------------------------------------------------------------
+     | Telegram Bot — Notifikasi Smart Pakcoy
+     |--------------------------------------------------------------------------
+     */
+    'telegram' => [
+        'bot_token'       => env('TELEGRAM_BOT_TOKEN', ''),
+        'chat_id'         => env('TELEGRAM_CHAT_ID', ''),
+        'water_cooldown'  => (int) env('TELEGRAM_WATER_COOLDOWN', 1800),
+    ],
+
 ];

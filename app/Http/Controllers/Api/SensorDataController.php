@@ -8,6 +8,7 @@ use App\Models\DeviceLog;
 use App\Models\SensorData;
 use App\Models\Anomaly;
 use App\Models\PlantConfig;
+use App\Services\TelegramService;
 use Illuminate\Http\Request;
 
 class SensorDataController extends Controller
@@ -172,13 +173,15 @@ class SensorDataController extends Controller
 
         // ─────────────────────────────────────────────────
         // CEK ANOMALI: Ketinggian Air Tandon
+        // Jika air rendah (jarak >= jarakNyala) → kirim notifikasi Telegram
+        // Pompa sirkulasi tetap dikontrol MANUAL dari website
         // ─────────────────────────────────────────────────
         if (isset($validated['water_level']) && isset($configs['ketinggian_air'])) {
             $jarak      = (float) $validated['water_level'];
-            $jarakMati  = (float) $configs['ketinggian_air']->min_optimal;  // jarak kecil = air penuh
-            $jarakNyala = (float) $configs['ketinggian_air']->max_optimal;  // jarak besar = air rendah
+            $jarakNyala = (float) $configs['ketinggian_air']->max_optimal; // jarak besar = air rendah
 
             if ($jarak >= $jarakNyala) {
+                // Simpan anomali ke database
                 Anomaly::create([
                     'device_id'   => $device->id,
                     'type'        => 'ketinggian_rendah',
@@ -186,6 +189,10 @@ class SensorDataController extends Controller
                     'value'       => $jarak,
                     'threshold'   => $jarakNyala,
                 ]);
+
+                // Kirim notifikasi Telegram ke pemilik (dengan cooldown agar tidak spam)
+                $cooldown = (int) config('services.telegram.water_cooldown', 1800);
+                (new TelegramService())->notifikasiAirRendah($jarak, $jarakNyala, $cooldown);
             }
         }
 

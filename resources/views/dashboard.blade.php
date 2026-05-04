@@ -57,10 +57,17 @@
                         </div>
                     </div>
                     @if($latestSensor)
+                        @php
+                            // pH: terlalu asam < min, terlalu basa > max
+                            if ($ph === null)        $phLabel = ['--', 'text-secondary-light', 'ph'];
+                            elseif ($ph < $phMin)   $phLabel = ['⚠ Asam — Di bawah minimum', 'text-danger-main', 'bxs:down-arrow'];
+                            elseif ($ph > $phMax)   $phLabel = ['⚠ Basa — Melebihi batas', 'text-warning-main', 'bxs:up-arrow'];
+                            else                    $phLabel = ['✓ Normal', 'text-success-main', 'bxs:up-arrow'];
+                        @endphp
                         <p class="fw-medium text-sm text-primary-light mt-12 mb-0">
-                            <span id="ph-badge" class="d-inline-flex align-items-center gap-1 {{ $phStatus ? 'text-success-main' : 'text-danger-main' }}">
-                                <iconify-icon icon="{{ $phStatus ? 'bxs:up-arrow' : 'bxs:down-arrow' }}" class="text-xs"></iconify-icon>
-                                {{ $phStatus ? 'Normal' : 'Perhatian' }}
+                            <span id="ph-badge" class="d-inline-flex align-items-center gap-1 {{ $phLabel[1] }}">
+                                <iconify-icon icon="{{ $phLabel[2] }}" class="text-xs"></iconify-icon>
+                                {{ $phLabel[0] }}
                             </span>
                         </p>
                     @endif
@@ -83,10 +90,16 @@
                         </div>
                     </div>
                     @if($latestSensor)
+                        @php
+                            if ($suhu === null)        $suhuLabel = ['--', 'text-secondary-light', 'ph'];
+                            elseif ($suhu < $suhuMin)  $suhuLabel = ['⚠ Terlalu Dingin — Di bawah minimum', 'text-danger-main', 'bxs:down-arrow'];
+                            elseif ($suhu > $suhuMax)  $suhuLabel = ['⚠ Terlalu Panas — Melebihi batas', 'text-warning-main', 'bxs:up-arrow'];
+                            else                       $suhuLabel = ['✓ Normal', 'text-success-main', 'bxs:up-arrow'];
+                        @endphp
                         <p class="fw-medium text-sm text-primary-light mt-12 mb-0">
-                            <span id="suhu-badge" class="d-inline-flex align-items-center gap-1 {{ $suhuStatus ? 'text-success-main' : 'text-danger-main' }}">
-                                <iconify-icon icon="{{ $suhuStatus ? 'bxs:up-arrow' : 'bxs:down-arrow' }}" class="text-xs"></iconify-icon>
-                                {{ $suhuStatus ? 'Normal' : 'Perhatian' }}
+                            <span id="suhu-badge" class="d-inline-flex align-items-center gap-1 {{ $suhuLabel[1] }}">
+                                <iconify-icon icon="{{ $suhuLabel[2] }}" class="text-xs"></iconify-icon>
+                                {{ $suhuLabel[0] }}
                             </span>
                         </p>
                     @endif
@@ -109,10 +122,16 @@
                         </div>
                     </div>
                     @if($latestSensor)
+                        @php
+                            if ($ppm === null)         $ppmLabel = ['--', 'text-secondary-light', 'ph'];
+                            elseif ($ppm < $ppmMin)    $ppmLabel = ['⚠ Nutrisi Kurang — Pompa Aktif', 'text-danger-main', 'bxs:down-arrow'];
+                            elseif ($ppm > $ppmMax)    $ppmLabel = ['⚠ Nutrisi Berlebih — Bahaya Tanaman', 'text-warning-main', 'bxs:up-arrow'];
+                            else                       $ppmLabel = ['✓ Normal', 'text-success-main', 'bxs:up-arrow'];
+                        @endphp
                         <p class="fw-medium text-sm text-primary-light mt-12 mb-0">
-                            <span id="ppm-badge" class="d-inline-flex align-items-center gap-1 {{ $ppmStatus ? 'text-success-main' : 'text-danger-main' }}">
-                                <iconify-icon icon="{{ $ppmStatus ? 'bxs:up-arrow' : 'bxs:down-arrow' }}" class="text-xs"></iconify-icon>
-                                {{ $ppmStatus ? 'Normal' : ($ppm < $ppmMin ? 'Rendah — Pompa Aktif' : 'Terlalu Tinggi') }}
+                            <span id="ppm-badge" class="d-inline-flex align-items-center gap-1 {{ $ppmLabel[1] }}">
+                                <iconify-icon icon="{{ $ppmLabel[2] }}" class="text-xs"></iconify-icon>
+                                {{ $ppmLabel[0] }}
                             </span>
                         </p>
                     @endif
@@ -137,10 +156,15 @@
                         </div>
                     </div>
                     @if($latestSensor)
+                        @php
+                            if ($water_level === null)          $airLabel = ['--', 'text-secondary-light', 'ph'];
+                            elseif ($water_level >= $airNyala)  $airLabel = ['⚠ RENDAH — Segera Isi Air!', 'text-danger-main', 'bxs:down-arrow'];
+                            else                                $airLabel = ['✓ Aman', 'text-success-main', 'bxs:up-arrow'];
+                        @endphp
                         <p class="fw-medium text-sm text-primary-light mt-12 mb-0">
-                            <span id="air-badge" class="d-inline-flex align-items-center gap-1 {{ $airStatus ? 'text-success-main' : 'text-danger-main' }}">
-                                <iconify-icon icon="{{ $airStatus ? 'bxs:up-arrow' : 'bxs:down-arrow' }}" class="text-xs"></iconify-icon>
-                                {{ $airStatus ? 'Aman' : 'RENDAH! Isi Air' }}
+                            <span id="air-badge" class="d-inline-flex align-items-center gap-1 {{ $airLabel[1] }}">
+                                <iconify-icon icon="{{ $airLabel[2] }}" class="text-xs"></iconify-icon>
+                                {{ $airLabel[0] }}
                             </span>
                         </p>
                     @endif
@@ -533,17 +557,35 @@
                     document.getElementById('energy-detail').innerHTML   = (s.energy  ?? '--') + ' <span class="text-sm fw-normal text-secondary-light">kWh</span>';
 
                     if (data.configs) {
-                        const updateBadge = (id, value, cfg) => {
-                            const badge = document.getElementById(id + '-badge');
-                            if (badge && cfg && value !== null) {
-                                const ok = value >= cfg.min_optimal && value <= cfg.max_optimal;
-                                badge.className = `d-inline-flex align-items-center gap-1 ${ok ? 'text-success-main' : 'text-danger-main'}`;
-                                badge.innerHTML = `<iconify-icon icon="${ok ? 'bxs:up-arrow':'bxs:down-arrow'}" class="text-xs"></iconify-icon> ${ok ? 'Normal' : 'Perhatian'}`;
+                        const getLabel = (value, cfg, type) => {
+                            if (value === null || value === undefined) return { text: '--', cls: 'text-secondary-light', icon: 'ph' };
+                            const ok = value >= cfg.min_optimal && value <= cfg.max_optimal;
+                            if (ok) return { text: '✓ Normal', cls: 'text-success-main', icon: 'bxs:up-arrow' };
+                            if (type === 'ph') {
+                                return value < cfg.min_optimal
+                                    ? { text: '⚠ Asam — Di bawah minimum', cls: 'text-danger-main', icon: 'bxs:down-arrow' }
+                                    : { text: '⚠ Basa — Melebihi batas', cls: 'text-warning-main', icon: 'bxs:up-arrow' };
+                            } else if (type === 'suhu') {
+                                return value < cfg.min_optimal
+                                    ? { text: '⚠ Terlalu Dingin — Di bawah minimum', cls: 'text-danger-main', icon: 'bxs:down-arrow' }
+                                    : { text: '⚠ Terlalu Panas — Melebihi batas', cls: 'text-warning-main', icon: 'bxs:up-arrow' };
+                            } else if (type === 'ppm') {
+                                return value < cfg.min_optimal
+                                    ? { text: '⚠ Nutrisi Kurang — Pompa Aktif', cls: 'text-danger-main', icon: 'bxs:down-arrow' }
+                                    : { text: '⚠ Nutrisi Berlebih — Bahaya Tanaman', cls: 'text-warning-main', icon: 'bxs:up-arrow' };
                             }
+                            return { text: '⚠ Di luar batas', cls: 'text-danger-main', icon: 'bxs:down-arrow' };
                         };
-                        updateBadge('ph',   s.ph,   data.configs.ph);
-                        updateBadge('suhu', s.suhu, data.configs.suhu);
-                        updateBadge('ppm',  s.ppm,  data.configs.ppm);
+                        const setBadge = (id, value, cfg, type) => {
+                            const badge = document.getElementById(id + '-badge');
+                            if (!badge || !cfg) return;
+                            const lbl = getLabel(value, cfg, type);
+                            badge.className = `d-inline-flex align-items-center gap-1 ${lbl.cls}`;
+                            badge.innerHTML = `<iconify-icon icon="${lbl.icon}" class="text-xs"></iconify-icon> ${lbl.text}`;
+                        };
+                        setBadge('ph',   s.ph,   data.configs.ph,   'ph');
+                        setBadge('suhu', s.suhu, data.configs.suhu, 'suhu');
+                        setBadge('ppm',  s.ppm,  data.configs.ppm,  'ppm');
                     }
                 }
                 document.getElementById('last-update').textContent = 'Terakhir update: ' + new Date().toLocaleTimeString('id-ID');
