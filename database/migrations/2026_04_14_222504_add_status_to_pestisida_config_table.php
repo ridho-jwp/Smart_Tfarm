@@ -4,13 +4,13 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         Schema::table('pestisida_config', function (Blueprint $table) {
-            // Menambahkan kolom status setelah kolom deskripsi
-            $table->enum('status', ['pending', 'dikirim'])->default('pending')->after('deskripsi');
+            if (!Schema::hasColumn('pestisida_config', 'status')) {
+                $table->enum('status', ['pending', 'dikirim'])->default('pending');
+            }
         });
     }
 

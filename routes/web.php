@@ -50,10 +50,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/configs', [PlantConfigController::class, 'update'])->name('configs.update');
 
     // Preset Konfigurasi
-    Route::post('/configs/presets/apply',        [PlantConfigController::class, 'applyPreset'])->name('configs.preset.apply');
-    Route::post('/configs/presets',              [PlantConfigController::class, 'storePreset'])->name('configs.preset.store');
-    Route::put('/configs/presets/{preset}',      [PlantConfigController::class, 'updatePreset'])->name('configs.preset.update');
-    Route::delete('/configs/presets/{preset}',   [PlantConfigController::class, 'destroyPreset'])->name('configs.preset.destroy');
+    Route::post('/configs/presets/apply', [PlantConfigController::class, 'applyPreset'])->name('configs.preset.apply');
+    Route::post('/configs/presets', [PlantConfigController::class, 'storePreset'])->name('configs.preset.store');
+    Route::put('/configs/presets/{preset}', [PlantConfigController::class, 'updatePreset'])->name('configs.preset.update');
+    Route::delete('/configs/presets/{preset}', [PlantConfigController::class, 'destroyPreset'])->name('configs.preset.destroy');
 
     // Pestisida Konfigurasi
     Route::get('/configs/pestisida/{id}', [PestisidaController::class, 'index'])->name('configs.pestisida');
