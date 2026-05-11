@@ -14,7 +14,9 @@ class DeteksiHama extends Model
         'confidence',
         'is_pestisida_pump',
         'label_hama',
+        'side_left',
+        'side_right',
     ];
     public $timestamps = true;
-  
+
 }

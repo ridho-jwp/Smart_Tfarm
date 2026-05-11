@@ -7,6 +7,7 @@ use App\Models\Device;
 use App\Models\DeviceLog;
 use App\Models\SensorData;
 use App\Models\Anomaly;
+use App\Models\NutrisiDosis;
 use App\Models\PlantConfig;
 use App\Services\TelegramService;
 use Illuminate\Http\Request;
@@ -23,52 +24,52 @@ class SensorDataController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'device_id'     => 'required|string',
-            'ph'            => 'nullable|numeric|between:0,14',
-            'suhu'          => 'nullable|numeric|between:-10,60',
-            'ppm'           => 'nullable|numeric|between:0,5000',
-            'water_level'   => 'nullable|numeric|min:0|max:500',
-            'voltage'       => 'nullable|numeric|between:0,300',
-            'current'       => 'nullable|numeric|between:0,100',
-            'power'         => 'nullable|numeric|between:0,25000',
-            'energy'        => 'nullable|numeric|min:0',
-            'frequency'     => 'nullable|numeric|between:45,65',
-            'power_factor'  => 'nullable|numeric|between:0,1',
-            'pump_circ_on'  => 'nullable|boolean',
-            'pump_peri_on'  => 'nullable|boolean',
-            'recorded_at'   => 'nullable|date',
+            'device_id' => 'required|string',
+            'ph' => 'nullable|numeric|between:0,14',
+            'suhu' => 'nullable|numeric|between:-10,60',
+            'ppm' => 'nullable|numeric|between:0,5000',
+            'water_level' => 'nullable|numeric|min:0|max:500',
+            'voltage' => 'nullable|numeric|between:0,300',
+            'current' => 'nullable|numeric|between:0,100',
+            'power' => 'nullable|numeric|between:0,25000',
+            'energy' => 'nullable|numeric|min:0',
+            'frequency' => 'nullable|numeric|between:45,65',
+            'power_factor' => 'nullable|numeric|between:0,1',
+            'pump_circ_on' => 'nullable|boolean',
+            'pump_peri_on' => 'nullable|boolean',
+            'recorded_at' => 'nullable|date',
         ]);
 
         // ── Cari atau buat perangkat sensor ──
         $device = Device::firstOrCreate(
             ['device_id' => $validated['device_id']],
             [
-                'name'           => 'Sensor ' . $validated['device_id'],
-                'type'           => 'sensor',
-                'is_online'      => true,
+                'name' => 'Sensor ' . $validated['device_id'],
+                'type' => 'sensor',
+                'is_online' => true,
                 'last_heartbeat' => now(),
             ]
         );
 
         $device->update([
-            'is_online'      => true,
+            'is_online' => true,
             'last_heartbeat' => now(),
         ]);
 
         // ── Simpan data sensor ──
         $sensorData = SensorData::create([
-            'device_id'    => $device->id,
-            'ph'           => $validated['ph']          ?? null,
-            'suhu'         => $validated['suhu']        ?? null,
-            'ppm'          => $validated['ppm']         ?? null,
-            'water_level'  => $validated['water_level'] ?? null,
-            'voltage'      => $validated['voltage']     ?? null,
-            'current'      => $validated['current']     ?? null,
-            'power'        => $validated['power']       ?? null,
-            'energy'       => $validated['energy']      ?? null,
-            'frequency'    => $validated['frequency']   ?? null,
+            'device_id' => $device->id,
+            'ph' => $validated['ph'] ?? null,
+            'suhu' => $validated['suhu'] ?? null,
+            'ppm' => $validated['ppm'] ?? null,
+            'water_level' => $validated['water_level'] ?? null,
+            'voltage' => $validated['voltage'] ?? null,
+            'current' => $validated['current'] ?? null,
+            'power' => $validated['power'] ?? null,
+            'energy' => $validated['energy'] ?? null,
+            'frequency' => $validated['frequency'] ?? null,
             'power_factor' => $validated['power_factor'] ?? null,
-            'recorded_at'  => $validated['recorded_at'] ?? now(),
+            'recorded_at' => $validated['recorded_at'] ?? now(),
         ]);
 
         // ── Ambil semua konfigurasi batas ──
@@ -78,25 +79,25 @@ class SensorDataController extends Controller
         // CEK ANOMALI: Suhu
         // ─────────────────────────────────────────────────
         if (isset($validated['suhu']) && isset($configs['suhu'])) {
-            $suhu    = (float) $validated['suhu'];
+            $suhu = (float) $validated['suhu'];
             $suhuMin = (float) $configs['suhu']->min_optimal;
             $suhuMax = (float) $configs['suhu']->max_optimal;
 
             if ($suhu > $suhuMax) {
                 Anomaly::create([
-                    'device_id'   => $device->id,
-                    'type'        => 'suhu_tinggi',
+                    'device_id' => $device->id,
+                    'type' => 'suhu_tinggi',
                     'description' => "Suhu air {$suhu}°C melebihi batas maksimum {$suhuMax}°C",
-                    'value'       => $suhu,
-                    'threshold'   => $suhuMax,
+                    'value' => $suhu,
+                    'threshold' => $suhuMax,
                 ]);
             } elseif ($suhu < $suhuMin) {
                 Anomaly::create([
-                    'device_id'   => $device->id,
-                    'type'        => 'suhu_rendah',
+                    'device_id' => $device->id,
+                    'type' => 'suhu_rendah',
                     'description' => "Suhu air {$suhu}°C di bawah batas minimum {$suhuMin}°C",
-                    'value'       => $suhu,
-                    'threshold'   => $suhuMin,
+                    'value' => $suhu,
+                    'threshold' => $suhuMin,
                 ]);
             }
         }
@@ -105,25 +106,25 @@ class SensorDataController extends Controller
         // CEK ANOMALI: pH
         // ─────────────────────────────────────────────────
         if (isset($validated['ph']) && isset($configs['ph'])) {
-            $ph    = (float) $validated['ph'];
+            $ph = (float) $validated['ph'];
             $phMin = (float) $configs['ph']->min_optimal;
             $phMax = (float) $configs['ph']->max_optimal;
 
             if ($ph > $phMax) {
                 Anomaly::create([
-                    'device_id'   => $device->id,
-                    'type'        => 'ph_tinggi',
+                    'device_id' => $device->id,
+                    'type' => 'ph_tinggi',
                     'description' => "pH air {$ph} melebihi batas maksimum {$phMax}",
-                    'value'       => $ph,
-                    'threshold'   => $phMax,
+                    'value' => $ph,
+                    'threshold' => $phMax,
                 ]);
             } elseif ($ph < $phMin) {
                 Anomaly::create([
-                    'device_id'   => $device->id,
-                    'type'        => 'ph_rendah',
+                    'device_id' => $device->id,
+                    'type' => 'ph_rendah',
                     'description' => "pH air {$ph} di bawah batas minimum {$phMin}",
-                    'value'       => $ph,
-                    'threshold'   => $phMin,
+                    'value' => $ph,
+                    'threshold' => $phMin,
                 ]);
             }
         }
@@ -132,62 +133,93 @@ class SensorDataController extends Controller
         // CEK ANOMALI: PPM/TDS Nutrisi
         // Jika rendah → catat perintah pompa peristaltik
         // ─────────────────────────────────────────────────
+
+
         if (isset($validated['ppm']) && isset($configs['ppm'])) {
-            $ppm    = (float) $validated['ppm'];
+            $ppm = (float) $validated['ppm'];
             $ppmMin = (float) $configs['ppm']->min_optimal;
             $ppmMax = (float) $configs['ppm']->max_optimal;
+            $ppmConfig = $configs['ppm']; // model PlantConfig lengkap
 
             if ($ppm < $ppmMin) {
+
+                // ── 1. Ambil parameter kalibrasi dari config ──
+                $volumeTandon = (float) ($ppmConfig->volume_tandon_liter ?? 100);
+                $ppmPerMlPerLiter = (float) ($ppmConfig->ppm_per_ml_per_liter ?? 0.7);
+                $mlPerDetik = (float) ($ppmConfig->ml_per_detik ?? 1.0);
+
+                // ── 2. Hitung kebutuhan dosis ──
+                $kalkulasi = NutrisiDosis::hitungDosis(
+                    $ppm,
+                    $ppmMin,
+                    $volumeTandon,
+                    $ppmPerMlPerLiter,
+                    $mlPerDetik
+                );
+
+                // ── 3. Buat anomali + antrean dosis (hanya jika tidak ada pending) ──
+                $adaPending = NutrisiDosis::where('device_id', $device->id)
+                    ->where('status', 'pending')
+                    ->exists();
+
                 Anomaly::create([
-                    'device_id'   => $device->id,
-                    'type'        => 'nutrisi_rendah',
-                    'description' => "PPM nutrisi {$ppm} ppm di bawah batas minimum {$ppmMin} ppm. Pompa peristaltik dinyalakan otomatis.",
-                    'value'       => $ppm,
-                    'threshold'   => $ppmMin,
+                    'device_id' => $device->id,
+                    'type' => 'nutrisi_rendah',
+                    'description' => sprintf(
+                        "PPM nutrisi %.1f ppm di bawah minimum %.1f ppm. "
+                        . "Defisit: %.1f ppm. Dosis AB Mix: %.2f mL (%.2f detik).",
+                        $ppm,
+                        $ppmMin,
+                        $kalkulasi['deficit'],
+                        $kalkulasi['dosis_ml'],
+                        $kalkulasi['durasi_detik']
+                    ),
+                    'value' => $ppm,
+                    'threshold' => $ppmMin,
                 ]);
 
-                // Catat log perintah pompa peristaltik (akan dibaca ESP32 jika diperlukan)
-                $periDevice = Device::where('device_id', 'ESP32-PUMP-PERISTALTIK')->first();
-                if ($periDevice) {
-                    DeviceLog::create([
-                        'device_id' => $periDevice->id,
-                        'action'    => 'peristaltic_on',
-                        'payload'   => json_encode([
-                            'reason'    => 'auto_low_ppm',
-                            'ppm'       => $ppm,
-                            'ppm_min'   => $ppmMin,
-                            'timestamp' => now()->toISOString(),
-                        ]),
+                if (!$adaPending && $kalkulasi['dosis_ml'] > 0) {
+                    NutrisiDosis::create([
+                        'device_id' => $device->id,
+                        'ppm_saat_ini' => $ppm,
+                        'ppm_target' => $ppmMin,
+                        'ppm_deficit' => $kalkulasi['deficit'],
+                        'volume_tandon_liter' => $volumeTandon,
+                        'ppm_per_ml' => $ppmPerMlPerLiter,
+                        'ml_per_detik' => $mlPerDetik,
+                        'dosis_ml' => $kalkulasi['dosis_ml'],
+                        'durasi_detik' => $kalkulasi['durasi_detik'],
+                        'status' => 'pending',
                     ]);
                 }
+
             } elseif ($ppm > $ppmMax) {
                 Anomaly::create([
-                    'device_id'   => $device->id,
-                    'type'        => 'nutrisi_tinggi',
+                    'device_id' => $device->id,
+                    'type' => 'nutrisi_tinggi',
                     'description' => "PPM nutrisi {$ppm} ppm melebihi batas maksimum {$ppmMax} ppm",
-                    'value'       => $ppm,
-                    'threshold'   => $ppmMax,
+                    'value' => $ppm,
+                    'threshold' => $ppmMax,
                 ]);
             }
         }
-
         // ─────────────────────────────────────────────────
         // CEK ANOMALI: Ketinggian Air Tandon
         // Jika air rendah (jarak >= jarakNyala) → kirim notifikasi Telegram
         // Pompa sirkulasi tetap dikontrol MANUAL dari website
         // ─────────────────────────────────────────────────
         if (isset($validated['water_level']) && isset($configs['ketinggian_air'])) {
-            $jarak      = (float) $validated['water_level'];
+            $jarak = (float) $validated['water_level'];
             $jarakNyala = (float) $configs['ketinggian_air']->max_optimal; // jarak besar = air rendah
 
             if ($jarak >= $jarakNyala) {
                 // Simpan anomali ke database
                 Anomaly::create([
-                    'device_id'   => $device->id,
-                    'type'        => 'ketinggian_rendah',
+                    'device_id' => $device->id,
+                    'type' => 'ketinggian_rendah',
                     'description' => "Air tandon rendah! Jarak sensor {$jarak}cm >= batas {$jarakNyala}cm. Segera isi air tandon.",
-                    'value'       => $jarak,
-                    'threshold'   => $jarakNyala,
+                    'value' => $jarak,
+                    'threshold' => $jarakNyala,
                 ]);
 
                 // Kirim notifikasi Telegram ke pemilik (dengan cooldown agar tidak spam)
@@ -199,7 +231,48 @@ class SensorDataController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Data sensor berhasil disimpan.',
-            'data'    => $sensorData,
+            'data' => $sensorData,
         ], 201);
     }
 }
+
+
+
+// if (isset($validated['ppm']) && isset($configs['ppm'])) {
+//     $ppm = (float) $validated['ppm'];
+//     $ppmMin = (float) $configs['ppm']->min_optimal;
+//     $ppmMax = (float) $configs['ppm']->max_optimal;
+
+//     if ($ppm < $ppmMin) {
+//         Anomaly::create([
+//             'device_id' => $device->id,
+//             'type' => 'nutrisi_rendah',
+//             'description' => "PPM nutrisi {$ppm} ppm di bawah batas minimum {$ppmMin} ppm. Pompa peristaltik dinyalakan otomatis.",
+//             'value' => $ppm,
+//             'threshold' => $ppmMin,
+//         ]);
+
+//         // Catat log perintah pompa peristaltik (akan dibaca ESP32 jika diperlukan)
+//         $periDevice = Device::where('device_id', 'ESP32-PUMP-PERISTALTIK')->first();
+//         if ($periDevice) {
+//             DeviceLog::create([
+//                 'device_id' => $periDevice->id,
+//                 'action' => 'peristaltic_on',
+//                 'payload' => json_encode([
+//                     'reason' => 'auto_low_ppm',
+//                     'ppm' => $ppm,
+//                     'ppm_min' => $ppmMin,
+//                     'timestamp' => now()->toISOString(),
+//                 ]),
+//             ]);
+//         }
+//     } elseif ($ppm > $ppmMax) {
+//         Anomaly::create([
+//             'device_id' => $device->id,
+//             'type' => 'nutrisi_tinggi',
+//             'description' => "PPM nutrisi {$ppm} ppm melebihi batas maksimum {$ppmMax} ppm",
+//             'value' => $ppm,
+//             'threshold' => $ppmMax,
+//         ]);
+//     }
+// }

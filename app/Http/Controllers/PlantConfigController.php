@@ -17,11 +17,11 @@ class PlantConfigController extends Controller
         // Cari preset yang match dengan config aktif
         $activePreset = $presets->first(function ($p) use ($configs) {
             return abs($p->ph_min - ($configs['ph']->min_optimal ?? 0)) < 0.01 &&
-                   abs($p->ph_max - ($configs['ph']->max_optimal ?? 0)) < 0.01 &&
-                   abs($p->suhu_min - ($configs['suhu']->min_optimal ?? 0)) < 0.01 &&
-                   abs($p->suhu_max - ($configs['suhu']->max_optimal ?? 0)) < 0.01 &&
-                   abs($p->ppm_min - ($configs['ppm']->min_optimal ?? 0)) < 0.01 &&
-                   abs($p->ppm_max - ($configs['ppm']->max_optimal ?? 0)) < 0.01;
+                abs($p->ph_max - ($configs['ph']->max_optimal ?? 0)) < 0.01 &&
+                abs($p->suhu_min - ($configs['suhu']->min_optimal ?? 0)) < 0.01 &&
+                abs($p->suhu_max - ($configs['suhu']->max_optimal ?? 0)) < 0.01 &&
+                abs($p->ppm_min - ($configs['ppm']->min_optimal ?? 0)) < 0.01 &&
+                abs($p->ppm_max - ($configs['ppm']->max_optimal ?? 0)) < 0.01;
         });
 
         return view('configs.index', compact('configs', 'presets', 'activePreset'));
@@ -54,9 +54,9 @@ class PlantConfigController extends Controller
 
         // Hanya update pH, suhu, PPM — ketinggian air TIDAK ikut preset
         $updates = [
-            'ph'   => ['min_optimal' => $preset->ph_min,   'max_optimal' => $preset->ph_max],
+            'ph' => ['min_optimal' => $preset->ph_min, 'max_optimal' => $preset->ph_max],
             'suhu' => ['min_optimal' => $preset->suhu_min, 'max_optimal' => $preset->suhu_max],
-            'ppm'  => ['min_optimal' => $preset->ppm_min,  'max_optimal' => $preset->ppm_max],
+            'ppm' => ['min_optimal' => $preset->ppm_min, 'max_optimal' => $preset->ppm_max],
         ];
 
         foreach ($updates as $param => $values) {
@@ -71,26 +71,26 @@ class PlantConfigController extends Controller
     public function storePreset(Request $request)
     {
         $request->validate([
-            'name'        => 'required|string|max:100',
+            'name' => 'required|string|max:100',
             'description' => 'nullable|string|max:255',
-            'ph_min'      => 'required|numeric|min:0|max:14',
-            'ph_max'      => 'required|numeric|min:0|max:14|gte:ph_min',
-            'suhu_min'    => 'required|numeric',
-            'suhu_max'    => 'required|numeric|gte:suhu_min',
-            'ppm_min'     => 'required|numeric|min:0',
-            'ppm_max'     => 'required|numeric|min:0|gte:ppm_min',
+            'ph_min' => 'required|numeric|min:0|max:14',
+            'ph_max' => 'required|numeric|min:0|max:14|gte:ph_min',
+            'suhu_min' => 'required|numeric',
+            'suhu_max' => 'required|numeric|gte:suhu_min',
+            'ppm_min' => 'required|numeric|min:0',
+            'ppm_max' => 'required|numeric|min:0|gte:ppm_min',
         ]);
 
         ConfigPreset::create([
-            'name'        => $request->name,
+            'name' => $request->name,
             'description' => $request->description,
-            'ph_min'      => $request->ph_min,
-            'ph_max'      => $request->ph_max,
-            'suhu_min'    => $request->suhu_min,
-            'suhu_max'    => $request->suhu_max,
-            'ppm_min'     => $request->ppm_min,
-            'ppm_max'     => $request->ppm_max,
-            'is_default'  => false,
+            'ph_min' => $request->ph_min,
+            'ph_max' => $request->ph_max,
+            'suhu_min' => $request->suhu_min,
+            'suhu_max' => $request->suhu_max,
+            'ppm_min' => $request->ppm_min,
+            'ppm_max' => $request->ppm_max,
+            'is_default' => false,
         ]);
 
         return redirect()->route('configs.index')
@@ -116,18 +116,25 @@ class PlantConfigController extends Controller
         }
 
         $request->validate([
-            'name'        => 'required|string|max:100',
+            'name' => 'required|string|max:100',
             'description' => 'nullable|string|max:255',
-            'ph_min'      => 'required|numeric|min:0|max:14',
-            'ph_max'      => 'required|numeric|min:0|max:14|gte:ph_min',
-            'suhu_min'    => 'required|numeric',
-            'suhu_max'    => 'required|numeric|gte:suhu_min',
-            'ppm_min'     => 'required|numeric|min:0',
-            'ppm_max'     => 'required|numeric|min:0|gte:ppm_min',
+            'ph_min' => 'required|numeric|min:0|max:14',
+            'ph_max' => 'required|numeric|min:0|max:14|gte:ph_min',
+            'suhu_min' => 'required|numeric',
+            'suhu_max' => 'required|numeric|gte:suhu_min',
+            'ppm_min' => 'required|numeric|min:0',
+            'ppm_max' => 'required|numeric|min:0|gte:ppm_min',
         ]);
 
         $preset->update($request->only([
-            'name', 'description', 'ph_min', 'ph_max', 'suhu_min', 'suhu_max', 'ppm_min', 'ppm_max'
+            'name',
+            'description',
+            'ph_min',
+            'ph_max',
+            'suhu_min',
+            'suhu_max',
+            'ppm_min',
+            'ppm_max'
         ]));
 
         return redirect()->route('configs.index')

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\NutrisiDosisController;
 use App\Http\Controllers\Api\SensorDataController;
 use App\Http\Controllers\Api\DeviceStatusController;
 use App\Http\Controllers\Api\AnomalyController;
@@ -12,13 +13,20 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::post('/analisis', [DeteksiHamaController::class, 'ProsesAnalisis']);
-    Route::post('/pestisida', [PestisidaController::class, 'mainPestisida']);
 });
 
 Route::middleware('verify.api.key')->prefix('v1')->group(function () {
     // Route::post('/analisis', [DeteksiHamaController::class, 'ProsesAnalisis']);
     // Route::post('/pestisida',[PestisidaController::class,'mainPestisida'])->name('pestisida.main');
 
+    // code abdul
+    Route::get('/pump-status', [DeteksiHamaController::class, 'cekstatuspompa']);
+
+    Route::post('/pestisida', [PestisidaController::class, 'mainPestisida']);
+
+
+
+    // code ido
     // Terima data sensor dari ESP32
     Route::post('/sensor-data', [SensorDataController::class, 'store']);
 
@@ -34,4 +42,8 @@ Route::middleware('verify.api.key')->prefix('v1')->group(function () {
     Route::get('/configs', [PlantConfigApiController::class, 'index']);
 
 
+    // routes/api.php — tambahkan di dalam grup middleware X-API-Key
+
+    Route::post('/nutrisi-dose', [NutrisiDosisController::class, 'dispatch']);
+    Route::post('/nutrisi-dose/{id}/done', [NutrisiDosisController::class, 'done']);
 });

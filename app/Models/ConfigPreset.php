@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class ConfigPreset extends Model
 {
     use HasFactory;
-
+    protected $table = 'config_presets';
     protected $fillable = [
         'name',
         'description',

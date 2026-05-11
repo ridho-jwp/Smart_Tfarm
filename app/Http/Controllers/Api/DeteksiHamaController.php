@@ -237,7 +237,7 @@ class DeteksiHamaController extends Controller
                 'file',
                 file_get_contents($file->getRealPath()),
                 'image.jpg'
-            )->post("https://detect.roboflow.com/datasetpakcoy/5?api_key=" . env('ROBOFLOW_API_KEY'));
+            )->post("https://detect.roboflow.com/datasetpakcoy/4?api_key=" . env('ROBOFLOW_API_KEY'));
 
             if ($response->failed()) {
                 return response()->json(['status' => 'error'], 500);
@@ -282,15 +282,15 @@ class DeteksiHamaController extends Controller
 
                 $label = strtolower($p['class']);
                 $conf = $p['confidence'];
-                $isUlatOrSiput = str_contains($label, 'ulat') || str_contains($label, 'siput');
+                $isHamaAtauRusak = str_contains($label, 'ulat') || str_contains($label, 'siput') || $label == 'berlubang';
 
-                if ($isUlatOrSiput) {
-                    $displayLabel = str_contains($label, 'ulat') ? 'ulat' : 'siput';
+                if ($isHamaAtauRusak) {
+                    $displayLabel = str_contains($label, 'ulat') ? 'ulat' : (str_contains($label, 'siput') ? 'siput' : 'berlubang');
                 } else {
                     $displayLabel = $label;
                 }
                 // warna
-                $drawColor = $isUlatOrSiput ? $colorRed : (($label == 'berlubang') ? $colorYellow : $colorGreen);
+                $drawColor = $isHamaAtauRusak ? $colorRed : (($label == 'berlubang') ? $colorYellow : $colorGreen);
                 // gambar bounding box
                 imagerectangle($imgSource, $x1, $y1, $x2, $y2, $drawColor);
                 imagestring(
@@ -308,16 +308,16 @@ class DeteksiHamaController extends Controller
                 if ($p['x'] < $middle) {
                     if ($conf > $kiri['conf']) {
                         // Simpan label ringkas saja jika mau
-                        $kiri = ['label' => $isUlatOrSiput ? 'ulat' : $label, 'conf' => $conf];
+                        $kiri = ['label' => $isHamaAtauRusak ? $displayLabel : $label, 'conf' => $conf];
                     }
                 } else {
                     if ($conf > $kanan['conf']) {
-                        $kanan = ['label' => $isUlatOrSiput ? 'ulat' : $label, 'conf' => $conf];
+                        $kanan = ['label' => $isHamaAtauRusak ? $displayLabel : $label, 'conf' => $conf];
                     }
                 }
 
                 // trigger pompaff
-                if ($conf >= 0.5 && $isUlatOrSiput) {
+                if ($conf >= 0.5 && $isHamaAtauRusak) {
                     $isPestisidaPump = true;
                 }
             }
@@ -376,37 +376,44 @@ class DeteksiHamaController extends Controller
             // 7. RESPONSE
             // =========================
 
+            // ProsesAnalisis - perbaikan logic status & response
             $status = 'aman';
 
-            // PRIORITAS 1: HAMA (ulat / siput)
+            // PRIORITAS 1: Cek hama (ulat/siput) atau berlubang
             if (
-                in_array($kiri['label'], ['ulat', 'siput']) ||
-                in_array($kanan['label'], ['ulat', 'siput'])
+                in_array($kiri['label'], ['ulat', 'siput', 'berlubang']) ||
+                in_array($kanan['label'], ['ulat', 'siput', 'berlubang'])
             ) {
                 $status = 'hama';
             }
-            // PRIORITAS 2: BERLUBANG
-            elseif (
-                $kiri['label'] == 'berlubang' ||
-                $kanan['label'] == 'berlubang'
-            ) {
-                $status = 'berlubang';
+            // PRIORITAS 2: Sehat jika kedua sisi sehat
+            elseif ($kiri['label'] == 'sehat' || $kanan['label'] == 'sehat') {
+                $status = 'sehat';
             }
 
-            // =========================
-// SIMPAN KE DATABASE
-// =========================
+            // Tentukan sisi mana yang terdeteksi hama
+            $hamaLabels = ['ulat', 'siput', 'berlubang'];
+            $sideLeft = in_array($kiri['label'], $hamaLabels);
+            $sideRight = in_array($kanan['label'], $hamaLabels);
+
+            // Simpan ke database - tambahkan kolom side_left & side_right
             DeteksiHama::create([
                 'session_id' => $sessionID,
                 'image_url' => asset('storage/deteksi/' . $filename),
                 'confidence' => max($kiri['conf'], $kanan['conf']),
-                'is_pestisida_pump' => $status == 'hama', // otomatis sinkron
-                'label_hama' => $status
+                'is_pestisida_pump' => $status == 'hama',
+                'label_hama' => $status,
+                'side_left' => $sideLeft,   // ← kolom baru
+                'side_right' => $sideRight,  // ← kolom baru
             ]);
+
             return response()->json([
                 'status' => 'success',
                 'kiri' => $kiri,
                 'kanan' => $kanan,
+                'label_status' => $status,
+                'side_left' => $sideLeft,
+                'side_right' => $sideRight,
                 'action' => $isPestisidaPump ? 'PUMP_ON' : 'PUMP_OFF',
                 'image_result' => asset('storage/deteksi/' . $filename)
             ], 201);
@@ -419,6 +426,34 @@ class DeteksiHamaController extends Controller
         }
     }
 
+    // cekstatuspompa() - tambahkan side_left & side_right
+    public function cekstatuspompa()
+    {
+        $latest = DeteksiHama::orderBy('created_at', 'desc')->first();
+
+        if (!$latest) {
+            return response()->json([
+                'is_pestisida_pump' => false,
+                'label_hama' => 'aman',
+                'side_left' => false,
+                'side_right' => false,
+            ]);
+        }
+
+        return response()->json([
+            'is_pestisida_pump' => (bool) $latest->is_pestisida_pump,
+            'label_hama' => $latest->label_hama,
+            'side_left' => (bool) $latest->side_left,   // ← tambahan
+            'side_right' => (bool) $latest->side_right,  // ← tambahan
+        ]);
+    }
+
+
+
+
+
+
+    // coba yang ini
     // public function ProsesAnalisis(Request $request)
     // {
     //     if (!$request->hasFile('image') || !$request->has('side')) {

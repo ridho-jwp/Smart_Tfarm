@@ -40,9 +40,9 @@ DataListrik bacaListrik();
 //  KONFIGURASI JARINGAN & SERVER
 // ============================================================
 
-const char* WIFI_SSID     = "RIDHO";
-const char* WIFI_PASSWORD = "Password123";
-const char* SERVER_URL    = "http://10.207.249.121:8000";
+const char* WIFI_SSID     = "YAN PW NYA APA";
+const char* WIFI_PASSWORD = "password";
+const char* SERVER_URL    = "http://10.217.227.121:8000";
 const char* API_KEY       = "hidra-core-secret-key-2026";
 const char* DEVICE_ID     = "ESP32-SENSOR-001";
 const char* PUMP_CIRC_ID  = "ESP32-PUMP-SIRKULASI";
@@ -80,7 +80,7 @@ const char* PUMP_PERI_ID  = "ESP32-PUMP-PERISTALTIK";
 #define ECHO_PIN            12
 #define RELAY_CIRC          26
 #define RELAY_PERI_NUTRISI  27   // peristaltik nutrisi (kode lama: RELAY_PERI)
-#define RELAY_PERI_PESTISIDA 25  // peristaltik pestisida ← BARU
+#define RELAY_PERI_PESTISIDA 22  // peristaltik pestisida ← BARU
 #define LED_PIN              2
 #define PZEM_RX_PIN         16
 #define PZEM_TX_PIN         17
