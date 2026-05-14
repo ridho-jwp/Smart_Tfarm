@@ -10,15 +10,21 @@ class DeteksiHamaController extends Controller
     /**
      * Daftar anomali yang terdeteksi (dengan filter).
      */
+
     public function index(Request $request)
     {
-        $latest = DeteksiHama::latest()->first();
+        $query = DeteksiHama::query();
 
-        if (!$latest) {
-            return view('anomalies', ['data' => collect()]);
+        // Filter status
+        if ($request->filter === 'resolved') {
+            $query->where('is_pestisida_pump', 0);
+        } elseif ($request->filter === 'unresolved') {
+            $query->where('is_pestisida_pump', 1);
         }
 
-        $data = DeteksiHama::where('session_id', $latest->session_id)->orderBy('created_at', 'desc')->get();
+        $data = $query
+            ->latest()
+            ->paginate(12);
 
         return view('anomalies', compact('data'));
     }

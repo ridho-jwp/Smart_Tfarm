@@ -11,23 +11,6 @@ class DeviceControlController extends Controller
     /**
      * Halaman kontrol perangkat.
      */
-    public function index()
-    {
-        $devices = Device::where('type', 'actuator')->get();
-
-        $recentLogs = DeviceLog::with(['device', 'user'])
-            ->whereIn('action', [
-                'circulation_on', 'circulation_off',
-                'peristaltic_on', 'peristaltic_off',
-                'pump_on', 'pump_off',
-            ])
-            ->orderBy('created_at', 'desc')
-            ->limit(20)
-            ->get();
-
-        return view('control', compact('devices', 'recentLogs'));
-    }
-
     /**
      * Toggle perangkat On/Off dari website.
      * Aksi yang didukung: circulation_on, circulation_off (mini waterpump)
@@ -36,29 +19,40 @@ class DeviceControlController extends Controller
     {
         $request->validate([
             'device_id' => 'required|exists:devices,id',
-            'action'    => 'required|in:circulation_on,circulation_off,pump_on,pump_off',
+            'action' => 'required|in:circulation_on,circulation_off,pump_on,pump_off',
         ]);
 
         $device = Device::findOrFail($request->device_id);
 
-        DeviceLog::create([
-            'device_id'    => $device->id,
-            'action'       => $request->action,
-            'payload'      => json_encode([
-                'command'   => $request->action,
+        $log = DeviceLog::create([
+            'device_id' => $device->id,
+            'action' => $request->action,
+            'payload' => json_encode([
+                'command' => $request->action,
                 'timestamp' => now()->toISOString(),
             ]),
             'performed_by' => auth()->id(),
         ]);
 
         $actionLabels = [
-            'circulation_on'  => 'dinyalakan',
+            'circulation_on' => 'dinyalakan',
             'circulation_off' => 'dimatikan',
-            'pump_on'         => 'dinyalakan',
-            'pump_off'        => 'dimatikan',
+            'pump_on' => 'dinyalakan',
+            'pump_off' => 'dimatikan',
         ];
 
         $actionText = $actionLabels[$request->action] ?? 'diperbarui';
+
+        // Perbaikan: Cek jika request adalah AJAX
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "{$device->name} berhasil {$actionText}.",
+                'action' => $request->action,
+                'time' => $log->created_at->format('d/m H:i'),
+                'user' => auth()->user()->name ?? 'Sistem'
+            ]);
+        }
 
         return redirect()->back()->with('success', "{$device->name} berhasil {$actionText}.");
     }

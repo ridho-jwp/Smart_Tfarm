@@ -9,18 +9,22 @@
             <p class="text-xs text-secondary-light mt-4 mb-0">Gambar tangkapan ESP32 Cam dan hasil analisis hama</p>
         </div>
         <div class="d-flex align-items-center gap-8">
-            <a href=""
+
+            <a href="{{ route('anomalies', ['filter' => 'all']) }}"
                 class="btn btn-sm radius-8 {{ !request('filter') || request('filter') === 'all' ? 'btn-primary' : 'btn-outline-secondary' }}">
                 Semua
             </a>
-            <a href=""
+
+            <a href="{{ route('anomalies', ['filter' => 'unresolved']) }}"
                 class="btn btn-sm radius-8 {{ request('filter') === 'unresolved' ? 'btn-danger' : 'btn-outline-secondary' }}">
                 Belum Ditangani
             </a>
-            <a href=""
+
+            <a href="{{ route('anomalies', ['filter' => 'resolved']) }}"
                 class="btn btn-sm radius-8 {{ request('filter') === 'resolved' ? 'btn-success' : 'btn-outline-secondary' }}">
                 Selesai
             </a>
+
         </div>
     </div>
 
@@ -29,10 +33,11 @@
             <div class="col">
                 <div class="card h-100 overflow-hidden">
                     {{-- Image --}}
-                    <div class="position-relative" style="height:200px; overflow:hidden; background:#f1f1f1; display:flex; align-items:center; justify-content:center;">
+                    <div class="position-relative"
+                        style="height:200px; overflow:hidden; background:#f1f1f1; display:flex; align-items:center; justify-content:center;">
                         @if ($anomaly->image_url)
-                            <img src="{{ $anomaly->image_url }}" alt="Hasil Deteksi"
-                                class="w-100 h-100 object-fit-cover">
+                            <img src="{{ asset($anomaly->image_url) }}" alt="Hasil Deteksi"
+                                class="w-100 h-100 object-fit-cover" loading="lazy" decoding="async">
                         @else
                             <div class="text-center">
                                 <iconify-icon icon="mdi:camera" class="text-secondary-light display-4"></iconify-icon>
@@ -67,7 +72,8 @@
                     <div class="card-body p-16">
                         <div class="d-flex align-items-start justify-content-between gap-2 mb-8">
                             <h6 class="fw-semibold mb-0">{{ ucfirst($anomaly->label_hama ?? 'Tidak Diketahui') }}</h6>
-                            <span class="text-xs text-secondary-light flex-shrink-0">{{ $anomaly->created_at->format('d/m H:i') }}</span>
+                            <span
+                                class="text-xs text-secondary-light flex-shrink-0">{{ $anomaly->created_at->format('d/m H:i') }}</span>
                         </div>
                         <p class="text-xs text-secondary-light mb-12">
                             {{ $anomaly->is_pestisida_pump ? 'Pompa pestisida dinyalakan otomatis.' : 'Tidak ada aksi otomatis.' }}
@@ -77,7 +83,7 @@
                             <span class="text-xs text-secondary-light">
                                 Kepercayaan: <strong>{{ number_format($anomaly->confidence * 100, 2) }}%</strong>
                             </span>
-                            @if($anomaly->is_pestisida_pump)
+                            @if ($anomaly->is_pestisida_pump)
                                 <span class="badge bg-danger-focus text-danger-main text-xs">Pompa ON</span>
                             @else
                                 <span class="badge bg-success-focus text-success-main text-xs">Aman</span>

@@ -34,6 +34,26 @@ class DeviceLog extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class , 'performed_by');
+        return $this->belongsTo(User::class, 'performed_by');
+    }
+
+    // Tambahkan di dalam class DeviceLog
+    protected static function booted()
+    {
+        static::created(function ($log) {
+            $device = $log->device;
+            if ($device) {
+                // Cek apakah action mengandung kata '_on' atau '_off'
+                $isOn = str_contains($log->action, '_on');
+
+                $metadata = $device->metadata ?? [];
+                $metadata['last_status'] = $isOn ? 'on' : 'off';
+                $metadata['last_action'] = $log->action;
+
+                // JANGAN update 'is_online' di sini. 
+                // 'is_online' biarkan diupdate oleh sistem heartbeat/ping dari ESP32.
+                $device->update(['metadata' => $metadata]);
+            }
+        });
     }
 }

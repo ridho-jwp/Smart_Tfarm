@@ -237,7 +237,7 @@ class DeteksiHamaController extends Controller
                 'file',
                 file_get_contents($file->getRealPath()),
                 'image.jpg'
-            )->post("https://detect.roboflow.com/datasetpakcoy/4?api_key=" . env('ROBOFLOW_API_KEY'));
+            )->post("https://detect.roboflow.com/datasetpakcoy/6?api_key=" . env('ROBOFLOW_API_KEY'));
 
             if ($response->failed()) {
                 return response()->json(['status' => 'error'], 500);
@@ -282,7 +282,7 @@ class DeteksiHamaController extends Controller
 
                 $label = strtolower($p['class']);
                 $conf = $p['confidence'];
-                $isHamaAtauRusak = str_contains($label, 'ulat') || str_contains($label, 'siput') || $label == 'berlubang';
+                $isHamaAtauRusak = str_contains($label, 'ulat') || str_contains($label, 'siput');
 
                 if ($isHamaAtauRusak) {
                     $displayLabel = str_contains($label, 'ulat') ? 'ulat' : (str_contains($label, 'siput') ? 'siput' : 'berlubang');
@@ -363,14 +363,26 @@ class DeteksiHamaController extends Controller
             // 6. SIMPAN GAMBAR
             // =========================
             $filename = 'deteksi_terbaru' . time() . '.jpg';
-            $savePath = storage_path('app/public/deteksi/' . $filename);
 
-            if (file_exists($savePath)) {
-                unlink($savePath);
-            }
+            $relativePath = 'deteksi/' . $filename;
 
-            imagejpeg($imgSource, $savePath);
+            // simpan sementara
+            $tempPath = storage_path('app/temp_' . $filename);
+
+            imagejpeg($imgSource, $tempPath, 90);
+
             imagedestroy($imgSource);
+
+            // simpan ke storage laravel
+            Storage::disk('public')->put(
+                $relativePath,
+                file_get_contents($tempPath)
+            );
+
+            // hapus file temp
+            if (file_exists($tempPath)) {
+                unlink($tempPath);
+            }
 
             // =========================
             // 7. RESPONSE
@@ -381,8 +393,8 @@ class DeteksiHamaController extends Controller
 
             // PRIORITAS 1: Cek hama (ulat/siput) atau berlubang
             if (
-                in_array($kiri['label'], ['ulat', 'siput', 'berlubang']) ||
-                in_array($kanan['label'], ['ulat', 'siput', 'berlubang'])
+                in_array($kiri['label'], ['ulat', 'siput']) ||
+                in_array($kanan['label'], ['ulat', 'siput'])
             ) {
                 $status = 'hama';
             }
@@ -399,7 +411,7 @@ class DeteksiHamaController extends Controller
             // Simpan ke database - tambahkan kolom side_left & side_right
             DeteksiHama::create([
                 'session_id' => $sessionID,
-                'image_url' => asset('storage/deteksi/' . $filename),
+                'image_url' => 'storage/deteksi/' . $filename,
                 'confidence' => max($kiri['conf'], $kanan['conf']),
                 'is_pestisida_pump' => $status == 'hama',
                 'label_hama' => $status,
@@ -415,7 +427,7 @@ class DeteksiHamaController extends Controller
                 'side_left' => $sideLeft,
                 'side_right' => $sideRight,
                 'action' => $isPestisidaPump ? 'PUMP_ON' : 'PUMP_OFF',
-                'image_result' => asset('storage/deteksi/' . $filename)
+                'image_result' => ('storage/deteksi/' . $filename)
             ], 201);
 
         } catch (\Exception $e) {
@@ -426,7 +438,7 @@ class DeteksiHamaController extends Controller
         }
     }
 
-    // cekstatuspompa() - tambahkan side_left & side_right
+
     public function cekstatuspompa()
     {
         $latest = DeteksiHama::orderBy('created_at', 'desc')->first();

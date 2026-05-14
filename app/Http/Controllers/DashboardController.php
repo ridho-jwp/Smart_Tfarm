@@ -33,12 +33,12 @@ class DashboardController extends Controller
             })
             ->map(function ($group) {
                 return [
-                    'ph'          => round($group->avg('ph'), 2),
-                    'suhu'        => round($group->avg('suhu'), 2),
-                    'ppm'         => round($group->avg('ppm'), 2),
+                    'ph' => round($group->avg('ph'), 2),
+                    'suhu' => round($group->avg('suhu'), 2),
+                    'ppm' => round($group->avg('ppm'), 2),
                     'water_level' => round($group->avg('water_level'), 2),
-                    'voltage'     => round($group->avg('voltage'), 2),
-                    'power'       => round($group->avg('power'), 2),
+                    'voltage' => round($group->avg('voltage'), 2),
+                    'power' => round($group->avg('power'), 2),
                 ];
             });
 
@@ -63,7 +63,7 @@ class DashboardController extends Controller
                 ->where('device_id', $circPump->id)
                 ->whereIn('action', ['circulation_on', 'circulation_off'])
                 ->orderBy('created_at', 'desc')
-                ->limit(10)
+                ->limit(4)
                 ->get()
             : collect([]);
 
@@ -73,7 +73,7 @@ class DashboardController extends Controller
                 ->where('device_id', $periPump->id)
                 ->whereIn('action', ['peristaltic_on', 'peristaltic_off'])
                 ->orderBy('created_at', 'desc')
-                ->limit(10)
+                ->limit(4)
                 ->get()
             : collect([]);
 
@@ -84,7 +84,11 @@ class DashboardController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->first()
             : null;
-        $circIsOn = $circLastLog && $circLastLog->action === 'circulation_on';
+        // $circIsOn = $circLastLog && $circLastLog->action === 'circulation_on';
+
+
+        // Cari status On/Off langsung dari tabel devices (metadata)
+        $circIsOn = ($circPump->metadata['last_status'] ?? 'off') === 'on';
 
         // Status peristaltik
         $periLastLog = $periPump
@@ -93,7 +97,8 @@ class DashboardController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->first()
             : null;
-        $periIsOn = $periLastLog && $periLastLog->action === 'peristaltic_on';
+        // $periIsOn = $periLastLog && $periLastLog->action === 'peristaltic_on';
+        $periIsOn = ($periPump->metadata['last_status'] ?? 'off') === 'on';
 
         return view('dashboard', compact(
             'latestSensor',
@@ -111,26 +116,51 @@ class DashboardController extends Controller
         ));
     }
 
+    // public function latestSensorData()
+    // {
+    //     $latest = SensorData::with('device')
+    //         ->orderBy('recorded_at', 'desc')
+    //         ->first();
+
+    //     $devices = Device::all()->map(function ($device) {
+    //         return [
+    //             'id' => $device->id,
+    //             'name' => $device->name,
+    //             'is_online' => $device->is_online,
+    //             'last_heartbeat' => $device->last_heartbeat?->diffForHumans(),
+    //         ];
+    //     });
+
+    //     $configs = PlantConfig::all()->keyBy('parameter');
+
+    //     return response()->json([
+    //         'sensor' => $latest,
+    //         'configs' => $configs,
+    //         'devices' => $devices,
+    //     ]);
+    // }
+
     public function latestSensorData()
     {
-        $latest = SensorData::with('device')
-            ->orderBy('recorded_at', 'desc')
-            ->first();
-
         $devices = Device::all()->map(function ($device) {
+            $isOnline = false;
+            if ($device->last_heartbeat) {
+                // Heartbeat timeout: 2 menit
+                $isOnline = $device->last_heartbeat->diffInMinutes(now()) < 2;
+            }
+
             return [
-                'id'             => $device->id,
-                'name'           => $device->name,
-                'is_online'      => $device->is_online,
-                'last_heartbeat' => $device->last_heartbeat?->diffForHumans(),
+                'id' => $device->id,
+                'name' => $device->name,
+                'is_online' => $isOnline,
+                'last_heartbeat' => $device->last_heartbeat?->diffForHumans() ?? 'Tidak ada data',
+                // Ini akan mengambil status 'on'/'off' untuk sirkulasi maupun peristaltik
+                'pump_status' => $device->metadata['last_status'] ?? 'off',
             ];
         });
 
-        $configs = PlantConfig::all()->keyBy('parameter');
-
         return response()->json([
-            'sensor'  => $latest,
-            'configs' => $configs,
+            'sensor' => SensorData::orderBy('recorded_at', 'desc')->first(),
             'devices' => $devices,
         ]);
     }

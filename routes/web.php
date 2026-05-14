@@ -25,7 +25,6 @@ Route::middleware('guest')->group(function () {
     });
 });
 
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
 // =============================================
 // PROTECTED ROUTES (Auth required)
@@ -58,4 +57,7 @@ Route::middleware('auth')->group(function () {
     // Pestisida Konfigurasi
     Route::get('/configs/pestisida/{id}', [PestisidaController::class, 'index'])->name('configs.pestisida');
     Route::post('/configs/pestisida/{id}', [PestisidaController::class, 'create'])->name('pestisida.store');
+
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
+
 });

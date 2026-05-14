@@ -9,7 +9,9 @@ class DeteksiHama extends Model
 {
     protected $primaryKey = 'id_analisis';
     protected $table = 'hamadetection';
+
     protected $fillable = [
+        'session_id',
         'image_url',
         'confidence',
         'is_pestisida_pump',

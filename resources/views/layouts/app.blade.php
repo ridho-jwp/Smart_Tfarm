@@ -50,23 +50,33 @@
                     </a>
                 </li>
 
-                <li class="sidebar-menu-group-title">Manajemen</li>
                 <li class="{{ request()->routeIs('anomalies') ? 'active-page' : '' }}">
                     <a href="{{ route('anomalies') }}">
                         <iconify-icon icon="solar:camera-outline" class="menu-icon"></iconify-icon>
                         <span>Deteksi Hama Daun</span>
                     </a>
                 </li>
+
+                <li class="sidebar-menu-group-title">Manajemen</li>
+                
                 <li class="{{ request()->routeIs('configs.index') ? 'active-page' : '' }}">
                     <a href="{{ route('configs.index') }}">
-                        <iconify-icon icon="icon-park-outline:setting-two" class="menu-icon"></iconify-icon>
-                        <span>Konfigurasi</span>
+                        <iconify-icon icon="icon-data" class="menu-icon"></iconify-icon>
+                        <span>Konfigurasi Data</span>
                     </a>
                 </li>
+
+                <li class="{{ request()->routeIs('') ? 'active-page' : '' }}">
+                    <a href="{{""}}">
+                        <iconify-icon icon="icon-park-outline:setting-two" class="menu-icon"></iconify-icon>
+                        <span>Setup Perangkat</span>
+                    </a>
+                </li>
+                
                 <li class="mt-4">
-                    <a href="/">
-                        <iconify-icon icon="solar:arrow-left-outline" class="menu-icon"></iconify-icon>
-                        <span>Kembali ke Beranda</span>
+                    <a href="{{ route('logout') }}">
+                        <iconify-icon icon="logout" class="menu-icon"></iconify-icon>
+                        <span>Keluar</span>
                     </a>
                 </li>
             </ul>

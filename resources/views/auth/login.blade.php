@@ -1,265 +1,315 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="light">
+<html lang="id" class="scroll-smooth">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masuk — Smart Pakcoy Hidroponik</title>
-    <link rel="icon" type="image/png" href="{{ asset('template1/assets/img/favicon.png') }}" sizes="16x16">
-    <!-- Google Fonts — sama dengan landing page -->
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Poppins:400,600,700&display=swap" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="{{ asset('template1/assets/css/all.min.css') }}">
-    <!-- Bootstrap -->
-    <link rel="stylesheet" href="{{ asset('template1/assets/bootstrap/css/bootstrap.min.css') }}">
-    <!-- Wowdash untuk iconify & style form -->
-    <link rel="stylesheet" href="{{ asset('wowdash/css/remixicon.css') }}">
-    <link rel="stylesheet" href="{{ asset('wowdash/css/style.css') }}">
+    <title>Login — Smart Pakcoy</title>
+
+    <link rel="icon" type="image/png" href="{{ asset('template1/assets/img/favicon.png') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&display=swap"
+        rel="stylesheet">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
-        :root {
-            --sp-green:      #2e7d32;
-            --sp-green-mid:  #388e3c;
-            --sp-green-light:#4caf50;
-            --sp-green-pale: #e8f5e9;
-            --sp-dark:       #1a2e1b;
+        body {
+            font-family: 'DM Sans', sans-serif;
         }
 
-        /* Override wowdash primary ke hijau */
-        .btn-primary,
-        .btn-primary:focus {
-            background-color: var(--sp-green) !important;
-            border-color: var(--sp-green) !important;
-        }
-        .btn-primary:hover {
-            background-color: var(--sp-green-mid) !important;
-            border-color: var(--sp-green-mid) !important;
+        .font-serif {
+            font-family: 'DM Serif Display', serif;
         }
 
-        .text-primary-600 { color: var(--sp-green) !important; }
-        .border-primary   { border-color: var(--sp-green) !important; }
-        .bg-primary-600   { background-color: var(--sp-green) !important; }
-        .bg-primary-50    { background-color: var(--sp-green-pale) !important; }
-
-        /* Panel kiri — hero */
-        .auth-left {
-            background: linear-gradient(160deg, var(--sp-dark) 0%, var(--sp-green) 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        .auth-left::before {
-            content: '';
-            position: absolute;
-            width: 400px; height: 400px;
-            background: rgba(255,255,255,.04);
-            border-radius: 50%;
-            top: -100px; left: -100px;
-        }
-        .auth-left::after {
-            content: '';
-            position: absolute;
-            width: 300px; height: 300px;
-            background: rgba(255,255,255,.06);
-            border-radius: 50%;
-            bottom: -80px; right: -80px;
+        .glass {
+            backdrop-filter: blur(14px);
+            background: rgba(255, 255, 255, .7);
         }
 
-        /* Judul panel kiri */
-        .auth-left-brand {
-            font-family: 'Poppins', sans-serif;
-            font-size: 2rem;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 16px;
-        }
-        .auth-left-brand span {
-            display: block;
-            width: 50px; height: 4px;
-            background: rgba(255,255,255,.5);
-            border-radius: 2px;
-            margin: 10px auto;
-        }
-        .auth-left p {
-            color: rgba(255,255,255,.8);
-            font-family: 'Open Sans', sans-serif;
-            font-size: 1rem;
-            line-height: 1.7;
-            max-width: 320px;
-        }
-
-        /* Fitur list di panel kiri */
-        .feature-list {
-            list-style: none;
-            padding: 0; margin: 24px 0 0;
-            text-align: left;
-        }
-        .feature-list li {
-            color: rgba(255,255,255,.85);
-            font-size: 0.9rem;
-            padding: 6px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .feature-list li i { color: #a5d6a7; font-size: 1rem; }
-
-        /* Panel kanan */
-        .auth-right { background: #f9fafb; }
-
-        /* Logo di atas form */
-        .login-brand {
-            font-family: 'Poppins', sans-serif;
-            font-weight: 700;
-            font-size: 1.3rem;
-            color: var(--sp-green);
-            text-decoration: none;
-        }
-        .login-brand:hover { color: var(--sp-green-mid); }
-
-        /* Link kembali ke landing */
-        .back-link {
-            font-size: 0.85rem;
-            color: #888;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: color .2s;
-        }
-        .back-link:hover { color: var(--sp-green); }
-
-        /* Form inputs */
-        .form-control:focus {
-            border-color: var(--sp-green) !important;
-            box-shadow: 0 0 0 3px rgba(46,125,50,.15) !important;
-        }
-
-        /* Remember me checkbox */
-        .form-check-input:checked {
-            background-color: var(--sp-green) !important;
-            border-color: var(--sp-green) !important;
-        }
-
-        /* Footer note */
-        .login-footer-note {
-            font-size: 0.78rem;
-            color: #aaa;
-            text-align: center;
-            margin-top: 24px;
+        .bg-grid {
+            background-image:
+                radial-gradient(rgba(255, 255, 255, .08) 1px, transparent 1px);
+            background-size: 24px 24px;
         }
     </style>
 </head>
 
-<body>
-    <section class="auth bg-base d-flex flex-wrap">
-        <!-- Panel Kiri -->
-        <div class="auth-left d-lg-block d-none">
-            <div class="d-flex align-items-center flex-column h-100 justify-content-center text-center px-32" style="position:relative;z-index:1;">
-                <div class="auth-left-brand">
-                    Smart Pakcoy
-                    <span></span>
-                </div>
-                <p>Sistem Monitoring &amp; Kontrol Hidroponik Berbasis IoT. Pantau kondisi tanaman pakcoy Anda secara real-time dari mana saja.</p>
-                <ul class="feature-list">
-                    <li><i class="fas fa-check-circle"></i> Monitoring pH, TDS &amp; Suhu Real-time</li>
-                    <li><i class="fas fa-check-circle"></i> Kontrol Pompa Otomatis</li>
-                    <li><i class="fas fa-check-circle"></i> Deteksi Anomali Tanaman</li>
-                    <li><i class="fas fa-check-circle"></i> Riwayat Data Lengkap</li>
-                </ul>
+<body class="bg-[#f6f8f5] overflow-hidden">
+
+    <section class="min-h-screen grid lg:grid-cols-2">
+
+        <!-- LEFT -->
+        <div
+            class="hidden lg:flex relative overflow-hidden bg-gradient-to-br from-green-950 via-green-900 to-green-800 items-center justify-center px-20">
+
+            <!-- pattern -->
+            <div class="absolute inset-0 bg-grid opacity-30"></div>
+
+            <!-- glow -->
+            <div class="absolute top-0 left-0 w-[400px] h-[400px] bg-green-500/20 blur-3xl rounded-full">
             </div>
+
+            <div class="absolute bottom-0 right-0 w-[350px] h-[350px] bg-emerald-400/10 blur-3xl rounded-full">
+            </div>
+
+            <!-- content -->
+            <div class="relative z-10 max-w-xl">
+
+                <div
+                    class="inline-flex items-center gap-3 bg-white/10 border border-white/10 rounded-full px-5 py-2 mb-8">
+
+                    <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+
+                    <span class="text-xs tracking-[0.25em] uppercase text-white/70 font-bold">
+                        T-Farm Hidroponik Pakcoy
+                    </span>
+
+                </div>
+
+                <h1 class="font-serif text-6xl leading-tight text-green-400 mb-8">
+                    T-Farm
+                    <span class="italic text-white">
+                        Pakcoy Hidroponik
+                    </span>
+
+                </h1>
+
+                <p class="text-lg leading-relaxed text-white/70 mb-10">
+
+                    Sistem monitoring hidroponik modern untuk memantau nutrisi,
+                    suhu, pH, dan pertumbuhan tanaman secara real-time.
+
+                </p>
+
+                <!-- feature -->
+                <div class="space-y-5">
+
+                    <div class="flex items-start gap-4">
+
+                        <div
+                            class="w-11 h-11 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center text-green-400 shrink-0">
+
+                            ✓
+
+                        </div>
+
+                        <div>
+                            <h4 class="text-white font-semibold mb-1">
+                                Monitoring Real-time
+                            </h4>
+
+                            <p class="text-sm text-white/60">
+                                Pantau pH, TDS, suhu air, dan kondisi kebun kapan saja.
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <div class="flex items-start gap-4">
+
+                        <div
+                            class="w-11 h-11 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center text-green-400 shrink-0">
+
+                            ✓
+
+                        </div>
+
+                        <div>
+                            <h4 class="text-white font-semibold mb-1">
+                                Smart Automation
+                            </h4>
+
+                            <p class="text-sm text-white/60">
+                                Sistem kontrol otomatis untuk pompa dan nutrisi.
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <div class="flex items-start gap-4">
+
+                        <div
+                            class="w-11 h-11 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center text-green-400 shrink-0">
+
+                            ✓
+
+                        </div>
+
+                        <div>
+                            <h4 class="text-white font-semibold mb-1">
+                                Analitik Data
+                            </h4>
+
+                            <p class="text-sm text-white/60">
+                                Riwayat monitoring lengkap untuk evaluasi tanaman.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
 
-        <!-- Panel Kanan -->
-        <div class="auth-right py-32 px-24 d-flex flex-column justify-content-center">
-            <div class="max-w-464-px mx-auto w-100">
+        <!-- RIGHT -->
+        <div class="relative flex items-center justify-center px-6 py-10 lg:px-16">
 
-                <!-- Kembali ke landing -->
-                <div class="mb-24">
-                    <a href="{{ route('landing') }}" class="back-link">
-                        <i class="fas fa-arrow-left"></i> Kembali ke Beranda
-                    </a>
+            <!-- mobile bg -->
+            <div class="absolute top-0 left-0 w-full h-[240px] bg-gradient-to-br from-green-950 to-green-800 lg:hidden">
+            </div>
+
+            <!-- card -->
+            <div
+                class="relative z-10 w-full max-w-md rounded-[2rem] bg-white shadow-2xl border border-gray-100 p-8 lg:p-10">
+
+                <!-- back -->
+                <a href="{{ route('landing') }}"
+                    class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-green-700 transition mb-8">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                        class="bi bi-house" viewBox="0 0 16 16">
+                        <path
+                            d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z" />
+                    </svg>
+                    Kembali
+                </a>
+
+                <!-- logo -->
+                <div class="mb-8">
+
+                    <h2 class="font-serif text-4xl text-gray-900 mb-3">
+
+                        Smart
+                        <span class="italic text-green-600">
+                            Pakcoy
+                        </span>
+
+                    </h2>
+
+                    <p class="text-gray-500 leading-relaxed">
+                        Masuk ke dashboard monitoring hidroponik Anda.
+                    </p>
+
                 </div>
 
-                <div>
-                    <a href="{{ route('landing') }}" class="login-brand mb-40 d-inline-block">
-                        Smart Pakcoy
-                    </a>
-                    <h4 class="mb-12">Masuk ke Akun Anda</h4>
-                    <p class="mb-32 text-secondary-light text-lg">Selamat datang! Silakan masukkan detail akun Anda.</p>
-                </div>
+                <!-- error -->
+                @if ($errors->any())
+                    <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
 
-                @if($errors->any())
-                    <div class="alert alert-danger d-flex align-items-center gap-2 mb-24" role="alert">
-                        <i class="ri-error-warning-line text-lg"></i>
-                        <div>
-                            @foreach($errors->all() as $error)
-                                <p class="mb-0">{{ $error }}</p>
-                            @endforeach
-                        </div>
+                        @foreach ($errors->all() as $error)
+                            <p class="text-sm text-red-600">
+                                {{ $error }}
+                            </p>
+                        @endforeach
+
                     </div>
                 @endif
 
-                <form action="{{ route('login') }}" method="POST">
+                <!-- form -->
+                <form action="{{ route('login') }}" method="POST" class="space-y-5">
+
                     @csrf
-                    <div class="icon-field mb-16">
-                        <span class="icon top-50 translate-middle-y">
-                            <iconify-icon icon="mage:email"></iconify-icon>
-                        </span>
-                        <input type="email" name="email" value="{{ old('email') }}"
-                            class="form-control h-56-px bg-neutral-50 radius-12 @error('email') is-invalid @enderror"
-                            placeholder="Email" required autofocus>
+
+                    <!-- email -->
+                    <div>
+
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Email
+                        </label>
+
+                        <input type="email" name="email" value="{{ old('email') }}" placeholder="Masukkan email"
+                            required autofocus
+                            class="w-full h-14 rounded-2xl border border-gray-200 bg-gray-50 px-5 outline-none focus:ring-4 focus:ring-green-100 focus:border-green-500 transition">
+
                     </div>
-                    <div class="position-relative mb-20">
-                        <div class="icon-field">
-                            <span class="icon top-50 translate-middle-y">
-                                <iconify-icon icon="solar:lock-password-outline"></iconify-icon>
-                            </span>
-                            <input type="password" name="password" class="form-control h-56-px bg-neutral-50 radius-12"
-                                id="your-password" placeholder="Password" required>
+
+                    <!-- password -->
+                    <div>
+
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Password
+                        </label>
+
+                        <div class="relative">
+
+                            <input type="password" name="password" id="password" placeholder="Masukkan password"
+                                required
+                                class="w-full h-14 rounded-2xl border border-gray-200 bg-gray-50 px-5 pr-14 outline-none focus:ring-4 focus:ring-green-100 focus:border-green-500 transition">
+
+                            <button type="button" id="togglePassword"
+                                class="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-green-600">
+
+                                👁
+
+                            </button>
+
                         </div>
-                        <span
-                            class="toggle-password ri-eye-line cursor-pointer position-absolute end-0 top-50 translate-middle-y me-16 text-secondary-light"
-                            data-toggle="#your-password"></span>
+
                     </div>
-                    <div class="mb-24">
-                        <div class="form-check style-check d-flex align-items-center">
-                            <input class="form-check-input border border-neutral-300" type="checkbox" name="remember"
-                                id="remember" {{ old('remember') ? 'checked' : '' }}>
-                            <label class="form-check-label" for="remember">Ingat saya</label>
-                        </div>
+
+                    <!-- remember -->
+                    <div class="flex items-center justify-between">
+
+                        <label class="flex items-center gap-3 text-sm text-gray-600">
+
+                            <input type="checkbox" name="remember"
+                                class="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500">
+
+                            Ingat saya
+
+                        </label>
+
                     </div>
-                    <button type="submit" class="btn btn-primary text-sm btn-sm px-12 py-16 w-100 radius-12">
-                        <i class="fas fa-sign-in-alt me-2"></i>
+
+                    <!-- submit -->
+                    <button type="submit"
+                        class="w-full h-14 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-semibold transition-all hover:-translate-y-1 shadow-lg shadow-green-600/20">
+
                         Masuk
+
                     </button>
+
                 </form>
 
-                <div class="login-footer-note">
-                    Smart Pakcoy &copy; {{ date('Y') }} — Sistem Monitoring Hidroponik
+                <!-- footer -->
+                <div class="mt-8 text-center">
+
+                    <p class="text-xs text-gray-400">
+                        Smart Pakcoy © {{ date('Y') }}
+                    </p>
+
                 </div>
+
             </div>
+
         </div>
+
     </section>
 
-    <script src="{{ asset('template1/assets/js/jquery-1.11.3.min.js') }}"></script>
-    <script src="{{ asset('template1/assets/bootstrap/js/bootstrap.min.js') }}"></script>
-    <script src="{{ asset('wowdash/js/lib/iconify-icon.min.js') }}"></script>
-    <script src="{{ asset('wowdash/js/app.js') }}"></script>
     <script>
-        function initializePasswordToggle(toggleSelector) {
-            $(toggleSelector).on("click", function () {
-                $(this).toggleClass("ri-eye-off-line");
-                var input = $($(this).attr("data-toggle"));
-                if (input.attr("type") === "password") {
-                    input.attr("type", "text");
-                } else {
-                    input.attr("type", "password");
-                }
-            });
-        }
-        initializePasswordToggle(".toggle-password");
+        const togglePassword =
+            document.getElementById('togglePassword');
+
+        const password =
+            document.getElementById('password');
+
+        togglePassword.addEventListener('click', () => {
+
+            const type =
+                password.getAttribute('type') === 'password' ?
+                'text' :
+                'password';
+
+            password.setAttribute('type', type);
+
+        });
     </script>
+
 </body>
 
 </html>
