@@ -8,6 +8,7 @@ use App\Http\Controllers\DeteksiHamaController;
 use App\Http\Controllers\PlantConfigController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\PestisidaController;
+use App\Http\Controllers\SprayManualController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -58,4 +59,9 @@ Route::middleware('auth')->group(function () {
     // Pestisida Konfigurasi
     Route::get('/configs/pestisida/{id}', [PestisidaController::class, 'index'])->name('configs.pestisida');
     Route::post('/configs/pestisida/{id}', [PestisidaController::class, 'create'])->name('pestisida.store');
+
+    // ── Penyemprotan Manual ──────────────────────────────────────
+    Route::post('/spray/mode',   [SprayManualController::class, 'toggleMode'])->name('spray.mode');
+    Route::post('/spray/manual', [SprayManualController::class, 'toggleManual'])->name('spray.manual');
+    Route::get('/spray/state',   [SprayManualController::class, 'getState'])->name('spray.state');
 });
