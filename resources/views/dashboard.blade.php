@@ -406,7 +406,197 @@
         </div>
     </div>
 
-    {{-- ─── Monitoring Listrik (PZEM-004T) ─── --}}
+    {{-- ─── Kontrol Penyemprotan Pestisida ─── --}}
+    <div class="card mb-24" id="spray-panel">
+        <div class="card-body">
+            {{-- Header --}}
+            <div class="d-flex align-items-center gap-3 mb-24">
+                <div class="w-48-px h-48-px bg-danger-focus text-danger-main rounded-circle d-flex justify-content-center align-items-center flex-shrink-0">
+                    <iconify-icon icon="mdi:spray" class="text-xl"></iconify-icon>
+                </div>
+                <div class="flex-1">
+                    <h6 class="fw-semibold mb-0">Kontrol Penyemprotan Pestisida</h6>
+                    <p class="text-xs text-secondary-light mb-0">Otomatis: aktif saat hama terdeteksi &bull; Manual: kontrol langsung dari dashboard</p>
+                </div>
+                {{-- Badge mode aktif --}}
+                <span id="spray-mode-badge"
+                    class="badge {{ $sprayState->auto_mode ? 'bg-success-focus text-success-main' : 'bg-warning-focus text-warning-main' }} rounded-pill px-12 py-6 text-sm fw-semibold">
+                    <iconify-icon icon="{{ $sprayState->auto_mode ? 'mdi:robot' : 'mdi:hand-back-right' }}" class="me-1"></iconify-icon>
+                    {{ $sprayState->auto_mode ? 'Mode Otomatis' : 'Mode Manual' }}
+                </span>
+            </div>
+
+            {{-- Divider --}}
+            <hr class="my-0 mb-20">
+
+            <div class="row gy-4">
+                {{-- Kolom kiri: Toggle Mode --}}
+                <div class="col-lg-4">
+                    <h6 class="text-xs fw-semibold text-secondary-light text-uppercase mb-16 d-flex align-items-center gap-2">
+                        <iconify-icon icon="mdi:toggle-switch"></iconify-icon>
+                        Mode Operasi
+                    </h6>
+
+                    {{-- Toggle Otomatis --}}
+                    <div class="p-16 border radius-12 mb-12 {{ $sprayState->auto_mode ? 'border-success bg-success-focus' : '' }}">
+                        <div class="d-flex align-items-center gap-12 mb-12">
+                            <div class="w-36-px h-36-px bg-success-focus text-success-main rounded-circle d-flex justify-content-center align-items-center flex-shrink-0">
+                                <iconify-icon icon="mdi:robot" class="text-lg"></iconify-icon>
+                            </div>
+                            <div>
+                                <p class="fw-semibold text-sm mb-0">Mode Otomatis</p>
+                                <p class="text-xs text-secondary-light mb-0">Semprot otomatis saat hama terdeteksi</p>
+                            </div>
+                        </div>
+                        <form method="POST" action="{{ route('spray.mode') }}">
+                            @csrf
+                            <input type="hidden" name="auto_mode" value="1">
+                            <button type="submit"
+                                class="btn {{ $sprayState->auto_mode ? 'btn-success' : 'btn-outline-success' }} btn-sm w-100 d-flex align-items-center justify-content-center gap-2">
+                                <iconify-icon icon="{{ $sprayState->auto_mode ? 'mdi:check-circle' : 'mdi:robot' }}" class="text-lg"></iconify-icon>
+                                {{ $sprayState->auto_mode ? 'Aktif' : 'Aktifkan' }}
+                            </button>
+                        </form>
+                    </div>
+
+                    {{-- Toggle Manual --}}
+                    <div class="p-16 border radius-12 {{ !$sprayState->auto_mode ? 'border-warning bg-warning-focus' : '' }}">
+                        <div class="d-flex align-items-center gap-12 mb-12">
+                            <div class="w-36-px h-36-px bg-warning-focus text-warning-main rounded-circle d-flex justify-content-center align-items-center flex-shrink-0">
+                                <iconify-icon icon="mdi:hand-back-right" class="text-lg"></iconify-icon>
+                            </div>
+                            <div>
+                                <p class="fw-semibold text-sm mb-0">Mode Manual</p>
+                                <p class="text-xs text-secondary-light mb-0">Kontrol penuh dari dashboard</p>
+                            </div>
+                        </div>
+                        <form method="POST" action="{{ route('spray.mode') }}">
+                            @csrf
+                            <input type="hidden" name="auto_mode" value="0">
+                            <button type="submit"
+                                class="btn {{ !$sprayState->auto_mode ? 'btn-warning' : 'btn-outline-warning' }} btn-sm w-100 d-flex align-items-center justify-content-center gap-2">
+                                <iconify-icon icon="{{ !$sprayState->auto_mode ? 'mdi:check-circle' : 'mdi:hand-back-right' }}" class="text-lg"></iconify-icon>
+                                {{ !$sprayState->auto_mode ? 'Aktif' : 'Aktifkan' }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                {{-- Kolom kanan: Tombol Manual --}}
+                <div class="col-lg-8">
+                    <h6 class="text-xs fw-semibold text-secondary-light text-uppercase mb-16 d-flex align-items-center gap-2">
+                        <iconify-icon icon="mdi:spray-bottle"></iconify-icon>
+                        Kontrol Penyemprotan Manual
+                        @if($sprayState->auto_mode)
+                            <span class="badge bg-secondary text-white rounded-pill px-8 py-2 text-xs">Nonaktif di mode otomatis</span>
+                        @endif
+                    </h6>
+
+                    {{-- Status Solenoid Real-time --}}
+                    <div class="d-flex gap-12 mb-20">
+                        <div id="status-kiri"
+                            class="flex-1 p-12 radius-8 border text-center {{ !$sprayState->auto_mode && $sprayState->manual_kiri ? 'bg-danger-focus border-danger' : 'bg-neutral-100' }}">
+                            <iconify-icon icon="mdi:pipe-valve"
+                                class="text-2xl mb-4 {{ !$sprayState->auto_mode && $sprayState->manual_kiri ? 'text-danger-main' : 'text-secondary-light' }}"></iconify-icon>
+                            <p class="text-xs fw-semibold mb-0">Solenoid Kiri</p>
+                            <span class="text-xs {{ !$sprayState->auto_mode && $sprayState->manual_kiri ? 'text-danger-main fw-bold' : 'text-secondary-light' }}">
+                                {{ !$sprayState->auto_mode && $sprayState->manual_kiri ? '● TERBUKA' : '○ Tutup' }}
+                            </span>
+                        </div>
+                        <div id="status-kanan"
+                            class="flex-1 p-12 radius-8 border text-center {{ !$sprayState->auto_mode && $sprayState->manual_kanan ? 'bg-danger-focus border-danger' : 'bg-neutral-100' }}">
+                            <iconify-icon icon="mdi:pipe-valve"
+                                class="text-2xl mb-4 {{ !$sprayState->auto_mode && $sprayState->manual_kanan ? 'text-danger-main' : 'text-secondary-light' }}"></iconify-icon>
+                            <p class="text-xs fw-semibold mb-0">Solenoid Kanan</p>
+                            <span class="text-xs {{ !$sprayState->auto_mode && $sprayState->manual_kanan ? 'text-danger-main fw-bold' : 'text-secondary-light' }}">
+                                {{ !$sprayState->auto_mode && $sprayState->manual_kanan ? '● TERBUKA' : '○ Tutup' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- 4 Tombol Manual --}}
+                    <div class="row gy-3">
+                        {{-- Semprot Kiri --}}
+                        <div class="col-sm-6">
+                            <form method="POST" action="{{ route('spray.manual') }}">
+                                @csrf
+                                <input type="hidden" name="target" value="kiri">
+                                <button type="submit"
+                                    {{ $sprayState->auto_mode ? 'disabled' : '' }}
+                                    class="btn {{ !$sprayState->auto_mode && $sprayState->manual_kiri && !$sprayState->manual_kanan ? 'btn-danger' : 'btn-outline-danger' }} w-100 d-flex align-items-center justify-content-center gap-2 py-10">
+                                    <iconify-icon icon="mdi:arrow-left-circle" class="text-xl"></iconify-icon>
+                                    <div class="text-start">
+                                        <div class="fw-semibold text-sm">Semprot Kiri</div>
+                                        <div class="text-xs opacity-75">Solenoid kiri terbuka</div>
+                                    </div>
+                                </button>
+                            </form>
+                        </div>
+
+                        {{-- Semprot Kanan --}}
+                        <div class="col-sm-6">
+                            <form method="POST" action="{{ route('spray.manual') }}">
+                                @csrf
+                                <input type="hidden" name="target" value="kanan">
+                                <button type="submit"
+                                    {{ $sprayState->auto_mode ? 'disabled' : '' }}
+                                    class="btn {{ !$sprayState->auto_mode && !$sprayState->manual_kiri && $sprayState->manual_kanan ? 'btn-danger' : 'btn-outline-danger' }} w-100 d-flex align-items-center justify-content-center gap-2 py-10">
+                                    <iconify-icon icon="mdi:arrow-right-circle" class="text-xl"></iconify-icon>
+                                    <div class="text-start">
+                                        <div class="fw-semibold text-sm">Semprot Kanan</div>
+                                        <div class="text-xs opacity-75">Solenoid kanan terbuka</div>
+                                    </div>
+                                </button>
+                            </form>
+                        </div>
+
+                        {{-- Semprot Keduanya --}}
+                        <div class="col-sm-6">
+                            <form method="POST" action="{{ route('spray.manual') }}">
+                                @csrf
+                                <input type="hidden" name="target" value="keduanya">
+                                <button type="submit"
+                                    {{ $sprayState->auto_mode ? 'disabled' : '' }}
+                                    class="btn {{ !$sprayState->auto_mode && $sprayState->manual_kiri && $sprayState->manual_kanan ? 'btn-danger' : 'btn-outline-danger' }} w-100 d-flex align-items-center justify-content-center gap-2 py-10">
+                                    <iconify-icon icon="mdi:arrow-expand-horizontal" class="text-xl"></iconify-icon>
+                                    <div class="text-start">
+                                        <div class="fw-semibold text-sm">Semprot Kiri & Kanan</div>
+                                        <div class="text-xs opacity-75">Kedua solenoid terbuka</div>
+                                    </div>
+                                </button>
+                            </form>
+                        </div>
+
+                        {{-- Stop --}}
+                        <div class="col-sm-6">
+                            <form method="POST" action="{{ route('spray.manual') }}">
+                                @csrf
+                                <input type="hidden" name="target" value="off">
+                                <button type="submit"
+                                    {{ $sprayState->auto_mode ? 'disabled' : '' }}
+                                    class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2 py-10">
+                                    <iconify-icon icon="mdi:stop-circle" class="text-xl"></iconify-icon>
+                                    <div class="text-start">
+                                        <div class="fw-semibold text-sm">Hentikan Semua</div>
+                                        <div class="text-xs opacity-75">Tutup semua solenoid</div>
+                                    </div>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    @if($sprayState->auto_mode)
+                        <div class="alert alert-warning py-8 px-12 mt-16 mb-0" role="alert" style="font-size:13px;">
+                            <iconify-icon icon="mdi:information" class="me-1"></iconify-icon>
+                            Kontrol manual dinonaktifkan saat mode otomatis aktif. Aktifkan <strong>Mode Manual</strong> untuk mengontrol solenoid secara langsung.
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <div class="mb-24">
         <div class="d-flex align-items-center gap-2 mb-16">
             <h6 class="fw-semibold mb-0 d-flex align-items-center gap-2">

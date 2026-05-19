@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AnomalyController;
 use App\Http\Controllers\Api\DeteksiHamaController;
 use App\Http\Controllers\Api\PlantConfigApiController;
 use App\Http\Controllers\PestisidaController;
+use App\Http\Controllers\Api\SprayCommandController;
 use Illuminate\Support\Facades\Route;
 
 /* |-------------------------------------------------------------------------- | Smart Pakcoy Hidroponik — API Routes |-------------------------------------------------------------------------- | Semua endpoint dilindungi oleh VerifyApiKey middleware. | Header yang diperlukan: X-API-Key: <token> */
@@ -16,8 +17,6 @@ Route::prefix('v1')->group(function () {
 });
 
 Route::middleware('verify.api.key')->prefix('v1')->group(function () {
-    // Route::post('/analisis', [DeteksiHamaController::class, 'ProsesAnalisis']);
-    // Route::post('/pestisida',[PestisidaController::class,'mainPestisida'])->name('pestisida.main');
 
     // code abdul
     Route::get('/pump-status', [DeteksiHamaController::class, 'cekstatuspompa']);
@@ -46,4 +45,8 @@ Route::middleware('verify.api.key')->prefix('v1')->group(function () {
 
     Route::post('/nutrisi-dose', [NutrisiDosisController::class, 'dispatch']);
     Route::post('/nutrisi-dose/{id}/done', [NutrisiDosisController::class, 'done']);
+
+    // Spray command — di-poll ESP32 setiap 5 detik
+    // Response: auto_mode, spray_kiri, spray_kanan, pump_on, source
+    Route::get('/spray-command', [SprayCommandController::class, 'getCommand']);
 });
