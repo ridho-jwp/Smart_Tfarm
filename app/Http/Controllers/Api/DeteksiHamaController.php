@@ -230,14 +230,14 @@ class DeteksiHamaController extends Controller
         try {
             $file = $request->file('image');
 
-            // =========================
-            // 1. KIRIM KE ROBOFLOW
-            // =========================
+            // ==========================================================
+            // 1. KIRIM KE ROBOFLOW (PASTIKAN VERSI TERBARU, MISAL: /8)
+            // ==========================================================
             $response = Http::attach(
                 'file',
                 file_get_contents($file->getRealPath()),
                 'image.jpg'
-            )->post("https://detect.roboflow.com/datasetpakcoy/4?api_key=" . env('ROBOFLOW_API_KEY'));
+            )->post("https://detect.roboflow.com/datasetpakcoy/8?api_key=" . env('ROBOFLOW_API_KEY')); // ← Ubah ke versi terbaru Anda
 
             if ($response->failed()) {
                 return response()->json(['status' => 'error'], 500);
@@ -282,15 +282,20 @@ class DeteksiHamaController extends Controller
 
                 $label = strtolower($p['class']);
                 $conf = $p['confidence'];
-                $isHamaAtauRusak = str_contains($label, 'ulat') || str_contains($label, 'siput') || $label == 'berlubang';
+
+                $isHama = str_contains($label, 'ulat') || str_contains($label, 'siput');
+                $isBerlubang = ($label == 'berlubang');
+                $isHamaAtauRusak = $isHama || $isBerlubang;
 
                 if ($isHamaAtauRusak) {
                     $displayLabel = str_contains($label, 'ulat') ? 'ulat' : (str_contains($label, 'siput') ? 'siput' : 'berlubang');
                 } else {
                     $displayLabel = $label;
                 }
-                // warna
-                $drawColor = $isHamaAtauRusak ? $colorRed : (($label == 'berlubang') ? $colorYellow : $colorGreen);
+
+                // PERBAIKAN WARNA: Ulat/Siput = Merah, Berlubang = Kuning, Sehat = Hijau
+                $drawColor = $isHama ? $colorRed : ($isBerlubang ? $colorYellow : $colorGreen);
+
                 // gambar bounding box
                 imagerectangle($imgSource, $x1, $y1, $x2, $y2, $drawColor);
                 imagestring(
@@ -307,20 +312,20 @@ class DeteksiHamaController extends Controller
                 // =========================
                 if ($p['x'] < $middle) {
                     if ($conf > $kiri['conf']) {
-                        // Simpan label ringkas saja jika mau
-                        $kiri = ['label' => $isHamaAtauRusak ? $displayLabel : $label, 'conf' => $conf];
+                        $kiri = ['label' => $displayLabel, 'conf' => $conf];
                     }
                 } else {
                     if ($conf > $kanan['conf']) {
-                        $kanan = ['label' => $isHamaAtauRusak ? $displayLabel : $label, 'conf' => $conf];
+                        $kanan = ['label' => $displayLabel, 'conf' => $conf];
                     }
                 }
 
-                // trigger pompaff
+                // trigger pompa jika confidence memadai dan terindikasi hama/rusak
                 if ($conf >= 0.5 && $isHamaAtauRusak) {
                     $isPestisidaPump = true;
                 }
             }
+
             if ($kiri['conf'] == 0) {
                 $kiri['label'] = 'tidak_terdeteksi';
             }
@@ -328,42 +333,30 @@ class DeteksiHamaController extends Controller
             if ($kanan['conf'] == 0) {
                 $kanan['label'] = 'tidak_terdeteksi';
             }
+
             // =========================
             // 5. TULIS LABEL DI GAMBAR
             // =========================
-            // $colorKiri = ($kiri['label'] == 'sehat') ? $colorGreen : $colorRed;
-            // $colorKanan = ($kanan['label'] == 'sehat') ? $colorGreen : $colorRed;
+            $colorKiri = ($kiri['label'] == 'sehat') ? $colorGreen : (($kiri['label'] == 'tidak_terdeteksi') ? $colorYellow : $colorRed);
+            $colorKanan = ($kanan['label'] == 'sehat') ? $colorGreen : (($kanan['label'] == 'tidak_terdeteksi') ? $colorYellow : $colorRed);
 
-
-            $colorKiri = ($kiri['label'] == 'sehat') ? $colorGreen :
-                (($kiri['label'] == 'tidak_terdeteksi') ? $colorYellow : $colorRed);
-
-            $colorKanan = ($kanan['label'] == 'sehat') ? $colorGreen :
-                (($kanan['label'] == 'tidak_terdeteksi') ? $colorYellow : $colorRed);
             \Log::info($predictions);
-            imagestring(
-                $imgSource,
-                5,
-                20,
-                20,
-                "KIRI: " . strtoupper($kiri['label']),
-                $colorKiri
-            );
-
-            imagestring(
-                $imgSource,
-                5,
-                $middle + 20,
-                20,
-                "KANAN: " . strtoupper($kanan['label']),
-                $colorKanan
-            );
+            imagestring($imgSource, 5, 20, 20, "KIRI: " . strtoupper($kiri['label']), $colorKiri);
+            imagestring($imgSource, 5, $middle + 20, 20, "KANAN: " . strtoupper($kanan['label']), $colorKanan);
 
             // =========================
             // 6. SIMPAN GAMBAR
             // =========================
             $filename = 'deteksi_terbaru' . time() . '.jpg';
-            $savePath = storage_path('app/public/deteksi/' . $filename);
+
+            // Perbaikan Path: Langsung mengarah ke folder public/storage/deteksi/
+            $saveDirectory = public_path('storage/deteksi/');
+            $savePath = $saveDirectory . $filename;
+
+            // Pastikan folder 'deteksi' sudah dibuat di dalam public/storage/, jika belum maka otomatis dibuat
+            if (!file_exists($saveDirectory)) {
+                mkdir($saveDirectory, 0755, true);
+            }
 
             if (file_exists($savePath)) {
                 unlink($savePath);
@@ -373,38 +366,32 @@ class DeteksiHamaController extends Controller
             imagedestroy($imgSource);
 
             // =========================
-            // 7. RESPONSE
+            // 7. LOGIKA RESPONSE & DB
             // =========================
-
-            // ProsesAnalisis - perbaikan logic status & response
             $status = 'aman';
+            $hamaLabels = ['ulat', 'siput', 'berlubang'];
 
             // PRIORITAS 1: Cek hama (ulat/siput) atau berlubang
-            if (
-                in_array($kiri['label'], ['ulat', 'siput', 'berlubang']) ||
-                in_array($kanan['label'], ['ulat', 'siput', 'berlubang'])
-            ) {
+            if (in_array($kiri['label'], $hamaLabels) || in_array($kanan['label'], $hamaLabels)) {
                 $status = 'hama';
             }
-            // PRIORITAS 2: Sehat jika kedua sisi sehat
-            elseif ($kiri['label'] == 'sehat' || $kanan['label'] == 'sehat') {
+            // PRIORITAS 2: Sehat jika KEDUA sisi sehat (Menggunakan &&)
+            elseif ($kiri['label'] == 'sehat' && $kanan['label'] == 'sehat') {
                 $status = 'sehat';
             }
 
-            // Tentukan sisi mana yang terdeteksi hama
-            $hamaLabels = ['ulat', 'siput', 'berlubang'];
             $sideLeft = in_array($kiri['label'], $hamaLabels);
             $sideRight = in_array($kanan['label'], $hamaLabels);
 
-            // Simpan ke database - tambahkan kolom side_left & side_right
+            // Simpan ke database
             DeteksiHama::create([
                 'session_id' => $sessionID,
                 'image_url' => asset('storage/deteksi/' . $filename),
                 'confidence' => max($kiri['conf'], $kanan['conf']),
-                'is_pestisida_pump' => $status == 'hama',
+                'is_pestisida_pump' => $isPestisidaPump, // ← Gunakan state dari loop deteksi yang lebih akurat
                 'label_hama' => $status,
-                'side_left' => $sideLeft,   // ← kolom baru
-                'side_right' => $sideRight,  // ← kolom baru
+                'side_left' => $sideLeft,
+                'side_right' => $sideRight,
             ]);
 
             return response()->json([
@@ -417,7 +404,6 @@ class DeteksiHamaController extends Controller
                 'action' => $isPestisidaPump ? 'PUMP_ON' : 'PUMP_OFF',
                 'image_result' => asset('storage/deteksi/' . $filename)
             ], 201);
-
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
