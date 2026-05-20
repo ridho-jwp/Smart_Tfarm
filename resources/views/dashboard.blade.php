@@ -665,6 +665,374 @@
 
 
 
+                    @if($circPump)
+                        {{-- Status badge --}}
+                        <div class="mb-16">
+                            <span class="badge {{ $circIsOn ? 'bg-success-focus text-success-main' : 'bg-secondary text-white' }} px-12 py-6 text-sm rounded-pill">
+                                <iconify-icon icon="{{ $circIsOn ? 'mdi:lightning-bolt' : 'mdi:power-off' }}" class="me-1"></iconify-icon>
+                                Status: {{ $circIsOn ? 'NYALA' : 'MATI' }}
+                            </span>
+                        </div>
+                        <div class="d-flex gap-12 mb-20">
+                            <form method="POST" action="{{ route('control.toggle') }}" class="flex-1">
+                                @csrf
+                                <input type="hidden" name="device_id" value="{{ $circPump->id }}">
+                                <input type="hidden" name="action" value="circulation_on">
+                                <button type="submit" class="btn btn-outline-success btn-sm w-100 d-flex align-items-center justify-content-center gap-2">
+                                    <iconify-icon icon="mdi:lightning-bolt" class="text-lg"></iconify-icon> ON
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ route('control.toggle') }}" class="flex-1">
+                                @csrf
+                                <input type="hidden" name="device_id" value="{{ $circPump->id }}">
+                                <input type="hidden" name="action" value="circulation_off">
+                                <button type="submit" class="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center gap-2">
+                                    <iconify-icon icon="mdi:power-off" class="text-lg"></iconify-icon> OFF
+                                </button>
+                            </form>
+                        </div>
+                        <div class="border-top pt-16">
+                            <h6 class="text-xs fw-semibold text-secondary-light text-uppercase mb-12">Riwayat Nyala/Mati</h6>
+                            <div class="max-h-200-px overflow-y-auto scroll-sm">
+                                @forelse($circLogs as $log)
+                                    <div class="d-flex align-items-center justify-content-between py-8 {{ !$loop->last ? 'border-bottom' : '' }}">
+                                        <div class="d-flex align-items-center gap-8">
+                                            <span class="w-8-px h-8-px rounded-circle {{ $log->action === 'circulation_on' ? 'bg-success-main' : 'bg-danger-main' }}"></span>
+                                            <span class="text-sm text-secondary-light">{{ $log->action === 'circulation_on' ? 'Nyala' : 'Mati' }}</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-8 text-xs text-secondary-light">
+                                            <span>{{ $log->user?->name ?? 'Sistem' }}</span>
+                                            <span>{{ $log->created_at->format('d/m H:i') }}</span>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <p class="text-xs text-secondary-light text-center py-12 mb-0">Belum ada riwayat.</p>
+                                @endforelse
+                            </div>
+                        </div>
+                    @else
+                        <div class="text-center py-24">
+                            <iconify-icon icon="mdi:water-pump-off" class="text-4xl text-secondary-light mb-8"></iconify-icon>
+                            <p class="text-sm text-secondary-light mb-4">Pompa sirkulasi belum terdaftar.</p>
+                            <p class="text-xs text-secondary-light mb-0">Device ID: <code>ESP32-PUMP-SIRKULASI</code></p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        {{-- Pompa Peristaltik (Nutrisi Otomatis) --}}
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3 mb-20">
+                        <div class="w-48-px h-48-px bg-warning-focus text-warning-main rounded-circle d-flex justify-content-center align-items-center">
+                            <iconify-icon icon="mdi:beaker-outline" class="text-xl"></iconify-icon>
+                        </div>
+                        <div class="flex-1">
+                            <h6 class="fw-semibold mb-0">Pompa Peristaltik (Nutrisi)</h6>
+                            <p class="text-xs text-secondary-light mb-0">Otomatis: nyala 60 detik jika PPM rendah</p>
+                        </div>
+                        @if($periPump)
+                            <span class="badge {{ $periPump->is_online ? 'bg-success-focus text-success-main' : 'bg-danger-focus text-danger-main' }} rounded-pill px-12 py-4 text-sm">
+                                {{ $periPump->is_online ? 'Online' : 'Offline' }}
+                            </span>
+                        @endif
+                    </div>
+
+                    @if($periPump)
+                        {{-- Status badge --}}
+                        <div class="mb-16">
+                            <span class="badge {{ $periIsOn ? 'bg-warning-focus text-warning-main' : 'bg-secondary text-white' }} px-12 py-6 text-sm rounded-pill">
+                                <iconify-icon icon="{{ $periIsOn ? 'mdi:pump' : 'mdi:pump-off' }}" class="me-1"></iconify-icon>
+                                Status: {{ $periIsOn ? 'AKTIF (Dosing Nutrisi)' : 'STANDBY' }}
+                            </span>
+                        </div>
+                        <div class="alert {{ $ppmStatus ? 'alert-success' : 'alert-warning' }} py-8 px-12 mb-16" role="alert" style="font-size:13px;">
+                            <iconify-icon icon="{{ $ppmStatus ? 'mdi:check-circle' : 'mdi:alert' }}" class="me-1"></iconify-icon>
+                            @if($ppmStatus)
+                                Nutrisi dalam kondisi optimal ({{ $ppm ?? '--' }} ppm).
+                            @else
+                                Nutrisi {{ $ppm !== null && $ppm < $ppmMin ? 'rendah' : 'tidak normal' }} ({{ $ppm ?? '--' }} ppm). Pompa otomatis aktif.
+                            @endif
+                        </div>
+                        <div class="border-top pt-16">
+                            <h6 class="text-xs fw-semibold text-secondary-light text-uppercase mb-12">Riwayat Dosing</h6>
+                            <div class="max-h-200-px overflow-y-auto scroll-sm">
+                                @forelse($periLogs as $log)
+                                    <div class="d-flex align-items-center justify-content-between py-8 {{ !$loop->last ? 'border-bottom' : '' }}">
+                                        <div class="d-flex align-items-center gap-8">
+                                            <span class="w-8-px h-8-px rounded-circle {{ $log->action === 'peristaltic_on' ? 'bg-warning-main' : 'bg-secondary' }}"></span>
+                                            <span class="text-sm text-secondary-light">{{ $log->action === 'peristaltic_on' ? 'Dosing Mulai' : 'Dosing Selesai' }}</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-8 text-xs text-secondary-light">
+                                            <span>{{ $log->user?->name ?? 'Otomatis' }}</span>
+                                            <span>{{ $log->created_at->format('d/m H:i') }}</span>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <p class="text-xs text-secondary-light text-center py-12 mb-0">Belum ada riwayat dosing.</p>
+                                @endforelse
+                            </div>
+                        </div>
+                    @else
+                        <div class="text-center py-24">
+                            <iconify-icon icon="mdi:pump-off" class="text-4xl text-secondary-light mb-8"></iconify-icon>
+                            <p class="text-sm text-secondary-light mb-4">Pompa peristaltik belum terdaftar.</p>
+                            <p class="text-xs text-secondary-light mb-0">Akan muncul setelah ESP32 pertama kali online.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ─── Kontrol Penyemprotan Pestisida ─── --}}
+    <div class="card mb-24" id="spray-panel">
+        <div class="card-body">
+            {{-- Header --}}
+            <div class="d-flex align-items-center gap-3 mb-24">
+                <div class="w-48-px h-48-px bg-danger-focus text-danger-main rounded-circle d-flex justify-content-center align-items-center flex-shrink-0">
+                    <iconify-icon icon="mdi:spray" class="text-xl"></iconify-icon>
+                </div>
+                <div class="flex-1">
+                    <h6 class="fw-semibold mb-0">Kontrol Penyemprotan Pestisida</h6>
+                    <p class="text-xs text-secondary-light mb-0">Otomatis: aktif saat hama terdeteksi &bull; Manual: kontrol langsung dari dashboard</p>
+                </div>
+                {{-- Badge mode aktif --}}
+                <span id="spray-mode-badge"
+                    class="badge {{ $sprayState->auto_mode ? 'bg-success-focus text-success-main' : 'bg-warning-focus text-warning-main' }} rounded-pill px-12 py-6 text-sm fw-semibold">
+                    <iconify-icon icon="{{ $sprayState->auto_mode ? 'mdi:robot' : 'mdi:hand-back-right' }}" class="me-1"></iconify-icon>
+                    {{ $sprayState->auto_mode ? 'Mode Otomatis' : 'Mode Manual' }}
+                </span>
+            </div>
+
+            {{-- Divider --}}
+            <hr class="my-0 mb-20">
+
+            <div class="row gy-4">
+                {{-- Kolom kiri: Toggle Mode --}}
+                <div class="col-lg-4">
+                    <h6 class="text-xs fw-semibold text-secondary-light text-uppercase mb-16 d-flex align-items-center gap-2">
+                        <iconify-icon icon="mdi:toggle-switch"></iconify-icon>
+                        Mode Operasi
+                    </h6>
+
+                    {{-- Toggle Otomatis --}}
+                    <div class="p-16 border radius-12 mb-12 {{ $sprayState->auto_mode ? 'border-success bg-success-focus' : '' }}">
+                        <div class="d-flex align-items-center gap-12 mb-12">
+                            <div class="w-36-px h-36-px bg-success-focus text-success-main rounded-circle d-flex justify-content-center align-items-center flex-shrink-0">
+                                <iconify-icon icon="mdi:robot" class="text-lg"></iconify-icon>
+                            </div>
+                            <div>
+                                <p class="fw-semibold text-sm mb-0">Mode Otomatis</p>
+                                <p class="text-xs text-secondary-light mb-0">Semprot otomatis saat hama terdeteksi</p>
+                            </div>
+                        </div>
+                        <form method="POST" action="{{ route('spray.mode') }}">
+                            @csrf
+                            <input type="hidden" name="auto_mode" value="1">
+                            <button type="submit"
+                                class="btn {{ $sprayState->auto_mode ? 'btn-success' : 'btn-outline-success' }} btn-sm w-100 d-flex align-items-center justify-content-center gap-2">
+                                <iconify-icon icon="{{ $sprayState->auto_mode ? 'mdi:check-circle' : 'mdi:robot' }}" class="text-lg"></iconify-icon>
+                                {{ $sprayState->auto_mode ? 'Aktif' : 'Aktifkan' }}
+                            </button>
+                        </form>
+                    </div>
+
+                    {{-- Toggle Manual --}}
+                    <div class="p-16 border radius-12 {{ !$sprayState->auto_mode ? 'border-warning bg-warning-focus' : '' }}">
+                        <div class="d-flex align-items-center gap-12 mb-12">
+                            <div class="w-36-px h-36-px bg-warning-focus text-warning-main rounded-circle d-flex justify-content-center align-items-center flex-shrink-0">
+                                <iconify-icon icon="mdi:hand-back-right" class="text-lg"></iconify-icon>
+                            </div>
+                            <div>
+                                <p class="fw-semibold text-sm mb-0">Mode Manual</p>
+                                <p class="text-xs text-secondary-light mb-0">Kontrol penuh dari dashboard</p>
+                            </div>
+                        </div>
+                        <form method="POST" action="{{ route('spray.mode') }}">
+                            @csrf
+                            <input type="hidden" name="auto_mode" value="0">
+                            <button type="submit"
+                                class="btn {{ !$sprayState->auto_mode ? 'btn-warning' : 'btn-outline-warning' }} btn-sm w-100 d-flex align-items-center justify-content-center gap-2">
+                                <iconify-icon icon="{{ !$sprayState->auto_mode ? 'mdi:check-circle' : 'mdi:hand-back-right' }}" class="text-lg"></iconify-icon>
+                                {{ !$sprayState->auto_mode ? 'Aktif' : 'Aktifkan' }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                {{-- Kolom kanan: Tombol Manual --}}
+                <div class="col-lg-8">
+                    <h6 class="text-xs fw-semibold text-secondary-light text-uppercase mb-16 d-flex align-items-center gap-2">
+                        <iconify-icon icon="mdi:spray-bottle"></iconify-icon>
+                        Kontrol Penyemprotan Manual
+                        @if($sprayState->auto_mode)
+                            <span class="badge bg-secondary text-white rounded-pill px-8 py-2 text-xs">Nonaktif di mode otomatis</span>
+                        @endif
+                    </h6>
+
+                    {{-- Status Solenoid Real-time --}}
+                    <div class="d-flex gap-12 mb-20">
+                        <div id="status-kiri"
+                            class="flex-1 p-12 radius-8 border text-center {{ !$sprayState->auto_mode && $sprayState->manual_kiri ? 'bg-danger-focus border-danger' : 'bg-neutral-100' }}">
+                            <iconify-icon icon="mdi:pipe-valve"
+                                class="text-2xl mb-4 {{ !$sprayState->auto_mode && $sprayState->manual_kiri ? 'text-danger-main' : 'text-secondary-light' }}"></iconify-icon>
+                            <p class="text-xs fw-semibold mb-0">Solenoid Kiri</p>
+                            <span class="text-xs {{ !$sprayState->auto_mode && $sprayState->manual_kiri ? 'text-danger-main fw-bold' : 'text-secondary-light' }}">
+                                {{ !$sprayState->auto_mode && $sprayState->manual_kiri ? '● TERBUKA' : '○ Tutup' }}
+                            </span>
+                        </div>
+                        <div id="status-kanan"
+                            class="flex-1 p-12 radius-8 border text-center {{ !$sprayState->auto_mode && $sprayState->manual_kanan ? 'bg-danger-focus border-danger' : 'bg-neutral-100' }}">
+                            <iconify-icon icon="mdi:pipe-valve"
+                                class="text-2xl mb-4 {{ !$sprayState->auto_mode && $sprayState->manual_kanan ? 'text-danger-main' : 'text-secondary-light' }}"></iconify-icon>
+                            <p class="text-xs fw-semibold mb-0">Solenoid Kanan</p>
+                            <span class="text-xs {{ !$sprayState->auto_mode && $sprayState->manual_kanan ? 'text-danger-main fw-bold' : 'text-secondary-light' }}">
+                                {{ !$sprayState->auto_mode && $sprayState->manual_kanan ? '● TERBUKA' : '○ Tutup' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- 4 Tombol Manual --}}
+                    <div class="row gy-3">
+                        {{-- Semprot Kiri --}}
+                        <div class="col-sm-6">
+                            <form method="POST" action="{{ route('spray.manual') }}">
+                                @csrf
+                                <input type="hidden" name="target" value="kiri">
+                                <button type="submit"
+                                    {{ $sprayState->auto_mode ? 'disabled' : '' }}
+                                    class="btn {{ !$sprayState->auto_mode && $sprayState->manual_kiri && !$sprayState->manual_kanan ? 'btn-danger' : 'btn-outline-danger' }} w-100 d-flex align-items-center justify-content-center gap-2 py-10">
+                                    <iconify-icon icon="mdi:arrow-left-circle" class="text-xl"></iconify-icon>
+                                    <div class="text-start">
+                                        <div class="fw-semibold text-sm">Semprot Kiri</div>
+                                        <div class="text-xs opacity-75">Solenoid kiri terbuka</div>
+                                    </div>
+                                </button>
+                            </form>
+                        </div>
+
+                        {{-- Semprot Kanan --}}
+                        <div class="col-sm-6">
+                            <form method="POST" action="{{ route('spray.manual') }}">
+                                @csrf
+                                <input type="hidden" name="target" value="kanan">
+                                <button type="submit"
+                                    {{ $sprayState->auto_mode ? 'disabled' : '' }}
+                                    class="btn {{ !$sprayState->auto_mode && !$sprayState->manual_kiri && $sprayState->manual_kanan ? 'btn-danger' : 'btn-outline-danger' }} w-100 d-flex align-items-center justify-content-center gap-2 py-10">
+                                    <iconify-icon icon="mdi:arrow-right-circle" class="text-xl"></iconify-icon>
+                                    <div class="text-start">
+                                        <div class="fw-semibold text-sm">Semprot Kanan</div>
+                                        <div class="text-xs opacity-75">Solenoid kanan terbuka</div>
+                                    </div>
+                                </button>
+                            </form>
+                        </div>
+
+                        {{-- Semprot Keduanya --}}
+                        <div class="col-sm-6">
+                            <form method="POST" action="{{ route('spray.manual') }}">
+                                @csrf
+                                <input type="hidden" name="target" value="keduanya">
+                                <button type="submit"
+                                    {{ $sprayState->auto_mode ? 'disabled' : '' }}
+                                    class="btn {{ !$sprayState->auto_mode && $sprayState->manual_kiri && $sprayState->manual_kanan ? 'btn-danger' : 'btn-outline-danger' }} w-100 d-flex align-items-center justify-content-center gap-2 py-10">
+                                    <iconify-icon icon="mdi:arrow-expand-horizontal" class="text-xl"></iconify-icon>
+                                    <div class="text-start">
+                                        <div class="fw-semibold text-sm">Semprot Kiri & Kanan</div>
+                                        <div class="text-xs opacity-75">Kedua solenoid terbuka</div>
+                                    </div>
+                                </button>
+                            </form>
+                        </div>
+
+                        {{-- Stop --}}
+                        <div class="col-sm-6">
+                            <form method="POST" action="{{ route('spray.manual') }}">
+                                @csrf
+                                <input type="hidden" name="target" value="off">
+                                <button type="submit"
+                                    {{ $sprayState->auto_mode ? 'disabled' : '' }}
+                                    class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2 py-10">
+                                    <iconify-icon icon="mdi:stop-circle" class="text-xl"></iconify-icon>
+                                    <div class="text-start">
+                                        <div class="fw-semibold text-sm">Hentikan Semua</div>
+                                        <div class="text-xs opacity-75">Tutup semua solenoid</div>
+                                    </div>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    @if($sprayState->auto_mode)
+                        <div class="alert alert-warning py-8 px-12 mt-16 mb-0" role="alert" style="font-size:13px;">
+                            <iconify-icon icon="mdi:information" class="me-1"></iconify-icon>
+                            Kontrol manual dinonaktifkan saat mode otomatis aktif. Aktifkan <strong>Mode Manual</strong> untuk mengontrol solenoid secara langsung.
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="mb-24">
+        <div class="d-flex align-items-center gap-2 mb-16">
+            <h6 class="fw-semibold mb-0 d-flex align-items-center gap-2">
+                <iconify-icon icon="mdi:lightning-bolt-circle" class="text-warning-main"></iconify-icon>
+                Monitoring Listrik
+            </h6>
+            <span class="text-xs px-8 py-4 rounded-pill bg-warning-focus text-warning-main fw-medium border br-warning">PZEM-004T</span>
+        </div>
+        <div class="row gy-4">
+            <div class="col-xl-3 col-sm-6">
+                <div class="card shadow-none border text-center h-100">
+                    <div class="card-body p-20">
+                        <div class="w-48-px h-48-px bg-warning-focus text-warning-main rounded-circle d-flex justify-content-center align-items-center mx-auto mb-16">
+                            <iconify-icon icon="mdi:lightning-bolt" class="text-2xl"></iconify-icon>
+                        </div>
+                        <p class="text-secondary-light text-sm mb-0">Tegangan</p>
+                        <h5 class="fw-bold mt-4 mb-0" id="voltage-detail">{{ $latestSensor?->voltage ?? '--' }} <span class="text-sm fw-normal text-secondary-light">V</span></h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+                <div class="card shadow-none border text-center h-100">
+                    <div class="card-body p-20">
+                        <div class="w-48-px h-48-px bg-danger-focus text-danger-main rounded-circle d-flex justify-content-center align-items-center mx-auto mb-16">
+                            <iconify-icon icon="mdi:power-plug" class="text-2xl"></iconify-icon>
+                        </div>
+                        <p class="text-secondary-light text-sm mb-0">Daya</p>
+                        <h5 class="fw-bold mt-4 mb-0" id="power-detail">{{ $latestSensor?->power ?? '--' }} <span class="text-sm fw-normal text-secondary-light">W</span></h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+                <div class="card shadow-none border text-center h-100">
+                    <div class="card-body p-20">
+                        <div class="w-48-px h-48-px bg-info-focus text-info-main rounded-circle d-flex justify-content-center align-items-center mx-auto mb-16">
+                            <iconify-icon icon="mdi:current-ac" class="text-2xl"></iconify-icon>
+                        </div>
+                        <p class="text-secondary-light text-sm mb-0">Arus</p>
+                        <h5 class="fw-bold mt-4 mb-0" id="current-detail">{{ $latestSensor?->current ?? '--' }} <span class="text-sm fw-normal text-secondary-light">A</span></h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+                <div class="card shadow-none border text-center h-100">
+                    <div class="card-body p-20">
+                        <div class="w-48-px h-48-px bg-success-focus text-success-main rounded-circle d-flex justify-content-center align-items-center mx-auto mb-16">
+                            <iconify-icon icon="mdi:meter-electric" class="text-2xl"></iconify-icon>
+                        </div>
+                        <p class="text-secondary-light text-sm mb-0">Energi</p>
+                        <h5 class="fw-bold mt-4 mb-0" id="energy-detail">{{ $latestSensor?->energy ?? '--' }} <span class="text-sm fw-normal text-secondary-light">kWh</span></h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     {{-- ─── Status Perangkat ─── --}}
     {{-- <div class="card">

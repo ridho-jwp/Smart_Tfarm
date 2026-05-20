@@ -7,6 +7,7 @@ use App\Models\DeviceLog;
 use App\Models\SensorData;
 use App\Models\Anomaly;
 use App\Models\PlantConfig;
+use App\Models\SprayManualState;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -100,6 +101,9 @@ class DashboardController extends Controller
         // $periIsOn = $periLastLog && $periLastLog->action === 'peristaltic_on';
         $periIsOn = ($periPump->metadata['last_status'] ?? 'off') === 'on';
 
+        // State penyemprotan manual/otomatis
+        $sprayState = SprayManualState::getState();
+
         return view('dashboard', compact(
             'latestSensor',
             'configs',
@@ -112,7 +116,8 @@ class DashboardController extends Controller
             'circLogs',
             'periLogs',
             'circIsOn',
-            'periIsOn'
+            'periIsOn',
+            'sprayState'
         ));
     }
 
