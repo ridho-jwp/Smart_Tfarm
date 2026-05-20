@@ -48,6 +48,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/configs', [PlantConfigController::class, 'index'])->name('configs.index');
     Route::post('/configs', [PlantConfigController::class, 'update'])->name('configs.update');
 
+
     // Preset Konfigurasi
     Route::post('/configs/presets/apply', [PlantConfigController::class, 'applyPreset'])->name('configs.preset.apply');
     Route::post('/configs/presets', [PlantConfigController::class, 'storePreset'])->name('configs.preset.store');

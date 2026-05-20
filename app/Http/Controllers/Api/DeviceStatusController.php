@@ -16,15 +16,15 @@ class DeviceStatusController extends Controller
         ]);
 
         // Deteksi otomatis tipe device: pompa = actuator, sensor = sensor
-        $deviceId   = strtolower($validated['device_id']);
+        $deviceId = strtolower($validated['device_id']);
         $isActuator = str_contains($deviceId, 'pump')
-                   || str_contains($deviceId, 'sirkulasi')
-                   || str_contains($deviceId, 'peristaltik')
-                   || str_contains($deviceId, 'relay');
+            || str_contains($deviceId, 'sirkulasi')
+            || str_contains($deviceId, 'peristaltik')
+            || str_contains($deviceId, 'relay');
 
         // Nama yang lebih ramah berdasarkan device_id
         $nameMap = [
-            'esp32-pump-sirkulasi'   => 'Mini Waterpump (Sirkulasi)',
+            'esp32-pump-sirkulasi' => 'Mini Waterpump (Sirkulasi)',
             'esp32-pump-peristaltik' => 'Pompa Peristaltik (Nutrisi)',
         ];
         $friendlyName = $nameMap[$deviceId] ?? ('Device ' . $validated['device_id']);
@@ -38,18 +38,18 @@ class DeviceStatusController extends Controller
         );
 
         $device->update([
-            'is_online'      => true,
+            'last_status' => true,
             'last_heartbeat' => now(),
         ]);
 
         DeviceLog::create([
             'device_id' => $device->id,
-            'action'    => 'heartbeat',
+            'action' => 'heartbeat',
         ]);
 
         return response()->json([
-            'success'     => true,
-            'message'     => 'Heartbeat diterima.',
+            'success' => true,
+            'message' => 'Heartbeat diterima.',
             'server_time' => now()->toISOString(),
         ]);
     }
@@ -74,7 +74,6 @@ class DeviceStatusController extends Controller
             ], 404);
         }
 
-        // Semua jenis action yang bisa dikendalikan
         $commandActions = [
             'circulation_on',
             'circulation_off',
@@ -84,15 +83,22 @@ class DeviceStatusController extends Controller
             'pump_off',
         ];
 
+        // Ambil command yang BELUM dieksekusi (executed_at null)
         $latestCommand = DeviceLog::where('device_id', $device->id)
             ->whereIn('action', $commandActions)
+            ->whereNull('executed_at')          // ← hanya yang belum dieksekusi
             ->orderBy('created_at', 'desc')
             ->first();
 
+        if ($latestCommand) {
+            // Tandai sudah dikirim ke ESP32
+            $latestCommand->update(['executed_at' => now()]);
+        }
+
         return response()->json([
-            'success'   => true,
-            'command'   => $latestCommand ? $latestCommand->action : null,
-            'payload'   => $latestCommand?->payload,
+            'success' => true,
+            'command' => $latestCommand?->action,
+            'payload' => $latestCommand?->payload,
             'issued_at' => $latestCommand?->created_at?->toISOString(),
         ]);
     }
